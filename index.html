@@ -3,186 +3,136 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EEG Simulator</title>
+    <title>EEG Brain Platform</title>
     <script src="/_sdk/element_sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
-      rel="stylesheet"
-    />
     <style>
       body {
         box-sizing: border-box;
-        font-family: "Outfit", sans-serif;
       }
 
-      .nav-link {
-        position: relative;
-        transition: all 0.3s ease;
-      }
-      .nav-link::after {
-        content: "";
-        position: absolute;
-        bottom: -4px;
-        left: 0;
-        width: 0;
-        height: 2px;
-        background: linear-gradient(90deg, #06b6d4, #8b5cf6);
-        transition: width 0.3s ease;
-      }
-      .nav-link:hover::after,
-      .nav-link.active::after {
-        width: 100%;
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
       }
 
-      .section {
-        display: none;
-        animation: fadeIn 0.4s ease;
-      }
-      .section.active {
-        display: block;
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+          transform: scale(1);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+          transform: scale(1.02);
+        }
       }
 
-      @keyframes fadeIn {
+      @keyframes slide-in-left {
         from {
           opacity: 0;
-          transform: translateY(10px);
+          transform: translateX(-50px);
         }
         to {
           opacity: 1;
-          transform: translateY(0);
+          transform: translateX(0);
         }
       }
 
-      .electrode {
+      @keyframes slide-in-right {
+        from {
+          opacity: 0;
+          transform: translateX(50px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .menu-card {
         transition: all 0.3s ease;
-        cursor: pointer;
-      }
-      .electrode:hover {
-        transform: scale(1.15);
-        filter: brightness(1.3) drop-shadow(0 0 8px currentColor);
-      }
-      .electrode.selected circle {
-        stroke: #fbbf24;
-        stroke-width: 4;
-        filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.9));
+        animation: fade-in 0.8s ease-out forwards;
       }
 
-      .wave-btn {
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-      }
-      .wave-btn::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
-        transition: left 0.5s ease;
-      }
-      .wave-btn:hover::before {
-        left: 100%;
+      .menu-card:hover {
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       }
 
-      .gradient-text {
-        background: linear-gradient(135deg, #94a3b8, #cbd5e1);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+      .brain-float {
+        animation: float 6s ease-in-out infinite;
       }
 
-      .glass-card {
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+      .feature-card {
+        opacity: 0;
+        animation: slide-in-left 0.6s ease-out forwards;
       }
 
-      .guide-card {
-        background: linear-gradient(
-          135deg,
-          rgba(15, 23, 42, 0.9),
-          rgba(30, 41, 59, 0.9)
-        );
-        border-left: 4px solid;
+      .feature-card:nth-child(2) {
+        animation: slide-in-right 0.6s ease-out forwards;
+        animation-delay: 0.2s;
       }
 
-      .step-number {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        flex-shrink: 0;
+      .feature-card:nth-child(3) {
+        animation: slide-in-left 0.6s ease-out forwards;
+        animation-delay: 0.4s;
       }
 
-      .info-box {
-        border-radius: 12px;
-        padding: 16px;
-        margin: 12px 0;
-      }
-      .info-box.tip {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-      }
-      .info-box.warning {
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.3);
-      }
-      .info-box.info {
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-      }
-      .info-box.danger {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
+      .feature-card:nth-child(4) {
+        animation: slide-in-right 0.6s ease-out forwards;
+        animation-delay: 0.6s;
       }
 
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #1e293b;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #06b6d4, #8b5cf6);
-        border-radius: 4px;
+      @keyframes rotate-slow {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
       }
 
-      .mobile-menu {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-      }
-      .mobile-menu.open {
-        transform: translateX(0);
+      .rotate-animation {
+        animation: rotate-slow 20s linear infinite;
       }
 
-      .code-block {
-        background: #0f172a;
-        border-radius: 12px;
-        padding: 16px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 13px;
-        overflow-x: auto;
-        border: 1px solid #334155;
+      #main-view,
+      #electrode-view {
+        display: none;
       }
 
-      .resource-card {
+      #main-view.active,
+      #electrode-view.active {
+        display: block;
+        animation: fade-in 0.5s ease-out;
+      }
+
+      .gallery-img {
         transition: all 0.3s ease;
       }
-      .resource-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+
+      .gallery-img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      }
+
+      .brain-gif {
+        animation: pulse-glow 3s ease-in-out infinite;
       }
     </style>
     <style>
@@ -192,2657 +142,1492 @@
     </style>
     <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   </head>
-  <body
-    class="h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-auto"
-  >
-    <nav
-      class="bg-slate-900/95 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50"
-    >
-      <div class="max-w-7xl mx-auto px-4">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center space-x-3">
-            <div
-              class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center border border-emerald-400 shadow-lg shadow-emerald-500/30"
-            >
-              <svg
-                class="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewbox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <span id="app-title" class="text-xl font-bold text-slate-200"
-              >EEG Simulator</span
-            >
-          </div>
-          <div class="hidden md:flex items-center space-x-4">
-            <button
-              onclick="showSection('simulator')"
-              class="nav-link active text-white font-medium py-2 px-2"
-              data-section="simulator"
-            >
-              Simulator
-            </button>
-            <button
-              onclick="showSection('guia')"
-              class="nav-link text-slate-300 hover:text-white font-medium py-2 px-2"
-              data-section="guia"
-            >
-              Anleitung
-            </button>
-            <button
-              onclick="showSection('arduino')"
-              class="nav-link text-slate-300 hover:text-white font-medium py-2 px-2"
-              data-section="arduino"
-            >
-              Arduino
-            </button>
-            <button
-              onclick="showSection('bibliografia')"
-              class="nav-link text-slate-300 hover:text-white font-medium py-2 px-2"
-              data-section="bibliografia"
-            >
-              Ressourcen
-            </button>
-          </div>
-          <button
-            id="mobile-menu-btn"
-            class="md:hidden p-2 rounded-lg hover:bg-slate-800 transition"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewbox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"
+  <body class="h-full">
+    <main class="w-full h-full overflow-auto">
+      <!-- Main Menu View -->
+      <div id="main-view" class="active min-h-full px-6 py-12">
+        <div class="max-w-7xl mx-auto">
+          <!-- Header -->
+          <header class="text-center mb-16">
+            <div class="flex justify-center mb-6">
+              <img
+                src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjdhc2p5dG55cDZ5cjZkOTA3Y3F1YzE3NTc4dWQxdmxkeDl1dWFmMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/dmo081XYExSXdB7m8j/giphy.gif"
+                alt="EEG Brain Visualization"
+                class="brain-gif w-full max-w-4xl h-64 object-cover rounded-2xl shadow-2xl"
+                onerror="this.style.display='none'; this.alt='GIF could not be loaded';"
               />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div
-        id="mobile-menu"
-        class="mobile-menu fixed top-16 left-0 w-64 h-full bg-slate-900 border-r border-slate-700 md:hidden z-50"
-      >
-        <div class="flex flex-col p-4 space-y-2">
-          <button
-            onclick="showSection('simulator'); closeMobileMenu()"
-            class="text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition"
-          >
-            Simulator
-          </button>
-          <button
-            onclick="showSection('guia'); closeMobileMenu()"
-            class="text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition"
-          >
-            Vollständige Anleitung
-          </button>
-          <button
-            onclick="showSection('arduino'); closeMobileMenu()"
-            class="text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition"
-          >
-            Arduino
-          </button>
-          <button
-            onclick="showSection('bibliografia'); closeMobileMenu()"
-            class="text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition"
-          >
-            Literatur
-          </button>
-        </div>
-      </div>
-    </nav>
-    <main class="max-w-7xl mx-auto px-4 py-6">
-      <!-- SECCIÓN GUÍA -->
-      <section id="section-guia" class="section">
-        <div class="glass-card rounded-2xl p-8 mb-8">
-          <h1 class="text-3xl md:text-4xl font-bold text-slate-200 mb-4">
-            Vollständige Anleitung zur Elektroenzephalographie
-          </h1>
-          <p class="text-xl text-slate-400 mb-6">
-            Lernen Sie von Grund auf, was ein EEG ist, wie jede Elektrode
-            funktioniert und wie Sie eines mit Arduino bauen können
-          </p>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div
-              class="bg-slate-700/30 border border-slate-600 rounded-lg p-4 text-center"
+            </div>
+            <h1 id="platform-title" class="text-5xl md:text-6xl font-bold mb-4">
+              🧠 EEG Brain Platform
+            </h1>
+            <p
+              id="platform-subtitle"
+              class="text-xl md:text-2xl opacity-80 max-w-3xl mx-auto"
             >
-              <div class="text-sm text-slate-500 mb-1">Niveau</div>
-              <div class="font-semibold text-slate-300">Anfänger</div>
-            </div>
-            <div
-              class="bg-slate-700/30 border border-slate-600 rounded-lg p-4 text-center"
-            >
-              <div class="text-sm text-slate-500 mb-1">Dauer</div>
-              <div class="font-semibold text-slate-300">30-45 Minuten</div>
-            </div>
-            <div
-              class="bg-slate-700/30 border border-slate-600 rounded-lg p-4 text-center"
-            >
-              <div class="text-sm text-slate-500 mb-1">Inhalt</div>
-              <div class="font-semibold text-slate-300">Theorie + Praxis</div>
-            </div>
-          </div>
-        </div>
-        <!-- Qué es EEG -->
-        <div class="guide-card border-l-slate-500 rounded-2xl p-6 mb-6">
-          <div class="flex items-start gap-4 mb-6">
-            <div
-              class="step-number bg-slate-700 border border-slate-600 text-slate-300 text-xl"
-            >
-              1
-            </div>
-            <div>
-              <h2 class="text-2xl font-bold text-slate-300 mb-2">
-                Was ist ein Elektroenzephalogramm (EEG)?
-              </h2>
-              <p class="text-slate-500">
-                Das Grundlegende, was Sie wissen müssen
-              </p>
-            </div>
-          </div>
-          <div class="bg-slate-800/50 rounded-lg p-6 mb-4">
-            <p class="text-slate-400 text-lg leading-relaxed">
-              Ein
-              <strong class="text-slate-300"
-                >Elektroenzephalogramm (EEG)</strong
-              >
-              ist wie ein "Mikrofon" für Ihr Gehirn. So wie ein Mikrofon
-              Schallschwingungen aufnimmt, erfasst das EEG die
-              <strong class="text-slate-300">elektrischen Signale</strong>, die
-              Ihr Gehirn erzeugt, wenn Sie denken, träumen, sich entspannen oder
-              sich konzentrieren.
+              Full-Stack Webplattform für EEG und Zerebrale VR-Simulation
             </p>
-          </div>
-          <div class="bg-slate-800/30 border border-slate-700 rounded-lg p-4">
-            <div class="flex items-start gap-3">
-              <div
-                class="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-slate-400 text-xs flex-shrink-0"
-              >
-                i
-              </div>
-              <div>
-                <h4 class="font-semibold text-slate-400 mb-1">
-                  Nützliche Analogie
-                </h4>
-                <p class="text-slate-500">
-                  Stellen Sie sich vor, Ihr Gehirn ist ein Stadion voller 86
-                  Milliarden Menschen (Neuronen), die "die Welle" machen. Das
-                  EEG kann nicht hören, was jede Person sagt, aber es kann
-                  erkennen, wann sie gemeinsam die Welle machen und wie schnell
-                  sie es tun.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Tipos de Ondas -->
-        <div class="guide-card border-l-slate-500 rounded-2xl p-6 mb-6">
-          <div class="flex items-start gap-4 mb-6">
+          </header>
+          <!-- Main Menu Cards -->
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <!-- Realtime Analysis Card -->
             <div
-              class="step-number bg-slate-700 border border-slate-600 text-slate-300 text-xl"
+              class="menu-card rounded-2xl shadow-2xl p-8 text-center cursor-pointer"
+              style="animation-delay: 0.1s"
+              onclick="showView('electrode')"
             >
-              2
+              <div class="text-6xl mb-4">📊</div>
+              <h3 id="menu-realtime" class="text-2xl font-bold mb-3">
+                Echtzeit-Analyse
+              </h3>
+              <p class="text-sm opacity-70 mb-4">
+                Dynamische EEG-Wellenmuster in Echtzeit visualisieren
+              </p>
+              <div
+                class="inline-block px-6 py-2 rounded-lg font-semibold text-sm transition hover:scale-105"
+              >
+                Starten →
+              </div>
             </div>
-            <div>
-              <h2 class="text-2xl font-bold text-slate-300 mb-2">
-                Arten von Gehirnwellen
-              </h2>
-              <p class="text-slate-500">Die 5 Hauptwellen und ihre Bedeutung</p>
+            <!-- VR Simulation Card -->
+            <div
+              class="menu-card rounded-2xl shadow-2xl p-8 text-center cursor-pointer"
+              style="animation-delay: 0.2s"
+            >
+              <div class="text-6xl mb-4">🥽</div>
+              <h3 id="menu-vr" class="text-2xl font-bold mb-3">
+                VR-Simulation
+              </h3>
+              <p class="text-sm opacity-70 mb-4">
+                Immersive 3D-Gehirnsimulation mit zerebraler Aktivität
+              </p>
+              <div
+                class="inline-block px-6 py-2 rounded-lg font-semibold text-sm transition hover:scale-105"
+              >
+                Starten →
+              </div>
+            </div>
+            <!-- Electrode Map Card -->
+            <div
+              class="menu-card rounded-2xl shadow-2xl p-8 text-center cursor-pointer"
+              style="animation-delay: 0.3s"
+              onclick="showView('electrode')"
+            >
+              <div class="text-6xl mb-4">🗺️</div>
+              <h3 id="menu-electrodes" class="text-2xl font-bold mb-3">
+                Elektrodenkarte
+              </h3>
+              <p class="text-sm opacity-70 mb-4">
+                Interaktive Karte der Gehirn-Elektroden
+              </p>
+              <div
+                class="inline-block px-6 py-2 rounded-lg font-semibold text-sm transition hover:scale-105"
+              >
+                Öffnen →
+              </div>
+            </div>
+            <!-- Session History Card -->
+            <div
+              class="menu-card rounded-2xl shadow-2xl p-8 text-center cursor-pointer"
+              style="animation-delay: 0.4s"
+            >
+              <div class="text-6xl mb-4">📚</div>
+              <h3 id="menu-history" class="text-2xl font-bold mb-3">
+                Sitzungsverlauf
+              </h3>
+              <p class="text-sm opacity-70 mb-4">
+                Historische EEG-Daten und Simulationsergebnisse
+              </p>
+              <div
+                class="inline-block px-6 py-2 rounded-lg font-semibold text-sm transition hover:scale-105"
+              >
+                Ansehen →
+              </div>
             </div>
           </div>
-          <div class="space-y-3">
-            <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-12 h-12 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center text-sm text-slate-400 font-mono"
-                >
-                  δ
+          <!-- Project Gallery -->
+          <div class="rounded-3xl shadow-2xl p-12 mb-12">
+            <h2 class="text-3xl font-bold text-center mb-8">
+              📸 Projekt-Vorschau
+            </h2>
+            <p class="text-center opacity-70 mb-8">
+              Einblicke in die EEG-Gehirnwellen-Simulation und -Analyse
+            </p>
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+              <div class="rounded-xl overflow-hidden shadow-lg gallery-img">
+                <img
+                  src="https://raw.githubusercontent.com/neurodivergent-coder/EEGGehirnwellenSimulator/refs/heads/main/4%20(1).png"
+                  alt="EEG Gehirnwellen Visualisierung"
+                  class="w-full h-auto"
+                  onerror="this.src=''; this.alt='Bild konnte nicht geladen werden'; this.style.display='none';"
+                />
+              </div>
+              <div class="rounded-xl overflow-hidden shadow-lg gallery-img">
+                <img
+                  src="https://raw.githubusercontent.com/neurodivergent-coder/EEGGehirnwellenSimulator/refs/heads/main/2%20(1).png"
+                  alt="3D Gehirn-Simulation"
+                  class="w-full h-auto"
+                  onerror="this.src=''; this.alt='Bild konnte nicht geladen werden'; this.style.display='none';"
+                />
+              </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+              <div class="rounded-xl overflow-hidden shadow-lg gallery-img">
+                <img
+                  src="https://raw.githubusercontent.com/neurodivergent-coder/EEGGehirnwellenSimulator/refs/heads/main/20250930_2218_Real-time%20EEG%20VR%20Flow_simple_compose_01k6eztts2f30b67krp0wmeb8t.png"
+                  alt="Real-time EEG VR Flow"
+                  class="w-full h-auto"
+                  onerror="this.src=''; this.alt='Bild konnte nicht geladen werden'; this.style.display='none';"
+                />
+              </div>
+              <div class="rounded-xl overflow-hidden shadow-lg gallery-img">
+                <img
+                  src="https://raw.githubusercontent.com/neurodivergent-coder/EEGGehirnwellenSimulator/refs/heads/main/20251004_1824_Journey%20Through%20Neural%20Pathways_simple_compose_01k6rw0pknecsshznjb0ep2kfs.png"
+                  alt="Journey Through Neural Pathways"
+                  class="w-full h-auto"
+                  onerror="this.src=''; this.alt='Bild konnte nicht geladen werden'; this.style.display='none';"
+                />
+              </div>
+              <div class="rounded-xl overflow-hidden shadow-lg gallery-img">
+                <img
+                  src="https://raw.githubusercontent.com/neurodivergent-coder/EEGGehirnwellenSimulator/refs/heads/main/20251004_2143_Neural%20Odyssey_simple_compose_01k6s7cjyrf8q9ncbbnxy58gs5.png"
+                  alt="Neural Odyssey"
+                  class="w-full h-auto"
+                  onerror="this.src=''; this.alt='Bild konnte nicht geladen werden'; this.style.display='none';"
+                />
+              </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+              <img
+                src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExaTJuMmQwNzExa3JxOWdkYnk2eGg4YXoycGV5bHBid2M1dGp2OXE2YSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/HyBvYAmYLFJydCgi5Z/giphy.gif"
+                alt="Brain Activity Visualization"
+                class="brain-gif w-full h-64 object-cover rounded-2xl shadow-2xl"
+                onerror="this.style.display='none'; this.alt='GIF could not be loaded';"
+              />
+              <img
+                src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNXY1bmwyN3NoNDM4MjA2MnF2aHYwNThkdmFzaXJ0YjVlbDVteG1ibyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Tj1S4nYuOv0mMCtGLw/giphy.gif"
+                alt="Neural Network Visualization"
+                class="brain-gif w-full h-64 object-cover rounded-2xl shadow-2xl"
+                onerror="this.style.display='none'; this.alt='GIF could not be loaded';"
+              />
+            </div>
+          </div>
+          <!-- Features Section -->
+          <div class="rounded-3xl shadow-2xl p-12 mb-12">
+            <h2 class="text-3xl font-bold text-center mb-12">
+              ✨ Kernfunktionen
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8">
+              <div class="feature-card rounded-xl p-6">
+                <div class="flex items-start gap-4">
+                  <div class="text-4xl">🧬</div>
+                  <div>
+                    <h4 class="text-xl font-bold mb-2">Echtzeit-EEG-Analyse</h4>
+                    <p class="opacity-70">
+                      Dynamische Darstellung zerebraler Wellenmuster (Theta,
+                      Beta, Alpha, Delta, Gamma) mit Arduino-Integration
+                    </p>
+                  </div>
                 </div>
-                <div class="flex-1">
-                  <h3 class="font-bold text-slate-300">Delta (0,5-4 Hz)</h3>
-                  <p class="text-sm text-slate-500">
-                    Tiefschlaf · Die langsamsten und größten
-                  </p>
+              </div>
+              <div class="feature-card rounded-xl p-6">
+                <div class="flex items-start gap-4">
+                  <div class="text-4xl">🎮</div>
+                  <div>
+                    <h4 class="text-xl font-bold mb-2">
+                      3D/VR-Gehirnsimulation
+                    </h4>
+                    <p class="opacity-70">
+                      Immersive VR-Erfahrung mit hervorgehobenen Gehirnarealen
+                      basierend auf detektierter EEG-Aktivität
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="feature-card rounded-xl p-6">
+                <div class="flex items-start gap-4">
+                  <div class="text-4xl">⚙️</div>
+                  <div>
+                    <h4 class="text-xl font-bold mb-2">
+                      Full-Stack-Architektur
+                    </h4>
+                    <p class="opacity-70">
+                      Backend-Server zur effizienten Datenverwaltung und
+                      dynamische Benutzeroberfläche zur Realisierung der
+                      Benutzerinteraktion
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="feature-card rounded-xl p-6">
+                <div class="flex items-start gap-4">
+                  <div class="text-4xl">💾</div>
+                  <div>
+                    <h4 class="text-xl font-bold mb-2">Datenpersistenz</h4>
+                    <p class="opacity-70">
+                      Implementierung einer Datenbank zur Speicherung von
+                      Benutzerprotokollen, EEG-Sitzungsdaten und historischen
+                      Simulationsergebnissen
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-12 h-12 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center text-sm text-slate-400 font-mono"
-                >
-                  θ
-                </div>
-                <div class="flex-1">
-                  <h3 class="font-bold text-slate-300">Theta (4-8 Hz)</h3>
-                  <p class="text-sm text-slate-500">
-                    Schläfrigkeit, Meditation, Kreativität
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-12 h-12 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center text-sm text-slate-400 font-mono"
-                >
-                  α
-                </div>
-                <div class="flex-1">
-                  <h3 class="font-bold text-slate-300">Alpha (8-13 Hz)</h3>
-                  <p class="text-sm text-slate-500">
-                    Entspannung bei geschlossenen Augen · Die bekanntesten
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-12 h-12 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center text-sm text-slate-400 font-mono"
-                >
-                  β
-                </div>
-                <div class="flex-1">
-                  <h3 class="font-bold text-slate-300">Beta (13-30 Hz)</h3>
-                  <p class="text-sm text-slate-500">
-                    Konzentration, aktives Denken, Wachheit
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-12 h-12 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center text-sm text-slate-400 font-mono"
-                >
-                  γ
-                </div>
-                <div class="flex-1">
-                  <h3 class="font-bold text-slate-300">Gamma (30-100 Hz)</h3>
-                  <p class="text-sm text-slate-500">
-                    Höchste Konzentration, Erkenntnis, die schnellsten
-                  </p>
-                </div>
-              </div>
+          </div>
+          <!-- Tech Stack -->
+          <div class="rounded-2xl shadow-2xl p-8 text-center">
+            <h3 class="text-2xl font-bold mb-6">🔧 Technologie-Stack</h3>
+            <div class="flex flex-wrap justify-center gap-4">
+              <span class="px-6 py-3 rounded-lg font-semibold">Arduino</span>
+              <span class="px-6 py-3 rounded-lg font-semibold">WebGL</span>
+              <span class="px-6 py-3 rounded-lg font-semibold">Three.js</span>
+              <span class="px-6 py-3 rounded-lg font-semibold">WebSocket</span>
+              <span class="px-6 py-3 rounded-lg font-semibold">Node.js</span>
+              <span class="px-6 py-3 rounded-lg font-semibold">MongoDB</span>
             </div>
           </div>
         </div>
-        <div class="text-center pt-4">
+      </div>
+      <!-- Electrode Map View (from previous code) -->
+      <div id="electrode-view" class="min-h-full px-6 py-8">
+        <div class="max-w-7xl mx-auto mb-6">
           <button
-            onclick="showSection('simulator')"
-            class="px-8 py-4 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg font-semibold transition text-lg text-slate-200"
+            id="back-btn"
+            class="px-6 py-3 rounded-lg font-semibold transition hover:scale-105"
           >
-            Zum Simulator
+            ← Zurück zum Hauptmenü
           </button>
         </div>
-      </section>
-      <!-- SECCIÓN SIMULADOR -->
-      <section id="section-simulator" class="section active">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="lg:col-span-1 space-y-6">
-            <div
-              class="glass-card rounded-2xl p-6 border border-emerald-500/30"
-            >
-              <h3 class="text-lg font-semibold mb-4 text-emerald-300">
-                🧠 Gehirnzustände
-              </h3>
-              <div class="space-y-2">
-                <button
-                  onclick="setWaveType('alpha')"
-                  id="btn-alpha"
-                  class="wave-btn w-full px-4 py-3 bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-500 text-green-300 rounded-lg hover:from-green-600/50 hover:to-emerald-600/50 transition text-left flex justify-between items-center ring-2 ring-green-400 shadow-lg shadow-green-500/20"
-                >
-                  <span class="font-semibold">🧘 Alpha (8-13 Hz)</span>
-                  <span class="text-xs text-green-400">Entspannung</span>
-                </button>
-                <button
-                  onclick="setWaveType('beta')"
-                  id="btn-beta"
-                  class="wave-btn w-full px-4 py-3 bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border-2 border-cyan-500 text-cyan-300 rounded-lg hover:from-cyan-600/50 hover:to-blue-600/50 transition text-left flex justify-between items-center"
-                >
-                  <span class="font-semibold">🎯 Beta (13-30 Hz)</span>
-                  <span class="text-xs text-cyan-400">Konzentration</span>
-                </button>
-                <button
-                  onclick="setWaveType('theta')"
-                  id="btn-theta"
-                  class="wave-btn w-full px-4 py-3 bg-gradient-to-r from-purple-600/30 to-violet-600/30 border-2 border-purple-500 text-purple-300 rounded-lg hover:from-purple-600/50 hover:to-violet-600/50 transition text-left flex justify-between items-center"
-                >
-                  <span class="font-semibold">🌙 Theta (4-8 Hz)</span>
-                  <span class="text-xs text-purple-400">Schläfrigkeit</span>
-                </button>
-                <button
-                  onclick="setWaveType('delta')"
-                  id="btn-delta"
-                  class="wave-btn w-full px-4 py-3 bg-gradient-to-r from-indigo-600/30 to-blue-700/30 border-2 border-indigo-500 text-indigo-300 rounded-lg hover:from-indigo-600/50 hover:to-blue-700/50 transition text-left flex justify-between items-center"
-                >
-                  <span class="font-semibold">😴 Delta (0,5-4 Hz)</span>
-                  <span class="text-xs text-indigo-400">Tiefschlaf</span>
-                </button>
-                <button
-                  onclick="setWaveType('adhd')"
-                  id="btn-adhd"
-                  class="wave-btn w-full px-4 py-3 bg-gradient-to-r from-red-600/30 to-orange-600/30 border-2 border-red-500 text-red-300 rounded-lg hover:from-red-600/50 hover:to-orange-600/50 transition text-left flex justify-between items-center"
-                >
-                  <span class="font-semibold">⚡ Schwere ADHS</span>
-                  <span class="text-xs text-red-400"
-                    >Aufmerksamkeitsdefizit</span
+        <div class="max-w-7xl mx-auto">
+          <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-3">
+              Zerebrale Elektrodenkarte
+            </h1>
+            <p class="text-lg opacity-80">
+              Klicken Sie auf eine Elektrode, um ihre EEG-Aktivität zu
+              visualisieren
+            </p>
+          </header>
+          <div class="grid lg:grid-cols-3 gap-6">
+            <!-- Brain Visualization -->
+            <div class="lg:col-span-2 rounded-2xl shadow-2xl p-8">
+              <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Gehirnansicht</h2>
+                <div class="flex gap-2">
+                  <button
+                    id="rotate-btn"
+                    class="px-4 py-2 rounded-lg font-semibold text-sm transition hover:scale-105"
                   >
-                </button>
-              </div>
-            </div>
-            <div class="glass-card rounded-2xl p-6 border border-cyan-500/30">
-              <h3 class="text-lg font-semibold mb-4 text-cyan-300">
-                ⚙️ Steuerung
-              </h3>
-              <div class="space-y-5">
-                <div>
-                  <label
-                    for="amplitude-slider"
-                    class="flex justify-between text-sm text-slate-400 mb-2"
+                    🔄 Rotieren
+                  </button>
+                  <button
+                    id="reset-btn"
+                    class="px-4 py-2 rounded-lg font-semibold text-sm transition hover:scale-105"
                   >
-                    <span>Amplitude</span>
-                    <span id="amplitude-value" class="text-cyan-400 font-mono"
-                      >50 µV</span
-                    >
-                  </label>
-                  <input
-                    type="range"
-                    id="amplitude-slider"
-                    min="10"
-                    max="200"
-                    value="50"
-                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                  />
+                    ⟲ Zurücksetzen
+                  </button>
                 </div>
-                <div>
-                  <label
-                    for="noise-slider"
-                    class="flex justify-between text-sm text-slate-400 mb-2"
-                  >
-                    <span>Rauschen</span>
-                    <span id="noise-value" class="text-purple-400 font-mono"
-                      >10%</span
-                    >
-                  </label>
-                  <input
-                    type="range"
-                    id="noise-slider"
-                    min="0"
-                    max="50"
-                    value="10"
-                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                  />
-                </div>
-                <button
-                  id="btn-start-stop"
-                  onclick="toggleSimulation()"
-                  class="w-full py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 border border-emerald-400 rounded-lg font-bold transition shadow-lg shadow-emerald-500/30 text-white"
-                >
-                  ▶ Simulation starten
-                </button>
               </div>
-            </div>
-          </div>
-          <div class="lg:col-span-2 space-y-6">
-            <div
-              class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-            >
-              <div class="flex items-center gap-3">
-                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                <span class="text-slate-400">Status:</span>
-                <span
-                  id="status-display-header"
-                  class="font-semibold text-emerald-400"
-                  >🧘 Entspannung (Alpha)</span
-                >
-              </div>
-              <div class="flex items-center gap-4 text-sm">
-                <span class="text-slate-400"
-                  >Elektrode:
-                  <span
-                    id="electrode-display-header"
-                    class="text-cyan-400 font-mono"
-                    >Fp1</span
-                  ></span
-                >
-                <span class="text-slate-400"
-                  >Zeit:
-                  <span
-                    id="time-display-header"
-                    class="text-purple-400 font-mono"
-                    >0.0s</span
-                  ></span
-                >
-              </div>
-            </div>
-            <div
-              class="rounded-2xl overflow-hidden shadow-2xl"
-              style="
-                background: #1a1a2e;
-                border: 8px solid #2d2d44;
-                box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8),
-                  0 0 30px rgba(0, 255, 136, 0.15);
-              "
-            >
               <div
-                class="px-4 py-3 flex items-center justify-between"
-                style="
-                  background: linear-gradient(180deg, #2a2a3e 0%, #1f1f32 100%);
-                  border-bottom: 3px solid #0f0f1a;
-                "
+                class="brain-3d flex justify-center items-center"
+                style="height: 500px"
               >
-                <div class="flex items-center gap-4">
-                  <div class="flex gap-2">
-                    <div
-                      class="w-4 h-4 rounded-full bg-red-500 shadow-lg shadow-red-500/70 border border-red-400"
-                    ></div>
-                    <div
-                      class="w-4 h-4 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/70 border border-yellow-300"
-                    ></div>
-                    <div
-                      class="w-4 h-4 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/70 border border-green-300"
-                    ></div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <div
-                      class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"
-                    ></div>
-                    <span class="text-cyan-300 text-sm font-mono tracking-wider"
-                      >NEURO-SCOPE 3000</span
-                    >
-                  </div>
-                </div>
-                <div class="flex items-center gap-6 text-sm font-mono">
-                  <span class="text-green-400"
-                    >CH:
-                    <span id="channel-display" class="text-green-300 font-bold"
-                      >Fp1</span
-                    ></span
-                  >
-                  <span class="text-amber-400"
-                    >GAIN:
-                    <span id="gain-display" class="text-amber-300"
-                      >x1000</span
-                    ></span
-                  >
-                  <span class="text-pink-400"
-                    >FILT: <span class="text-pink-300">0.5-70Hz</span></span
-                  >
-                </div>
-              </div>
-              <div
-                class="p-4 relative"
-                style="
-                  background: radial-gradient(
-                    ellipse at center,
-                    #0a1a0a 0%,
-                    #050d05 50%,
-                    #020502 100%
-                  );
-                "
-              >
-                <div
-                  class="absolute inset-0 pointer-events-none opacity-10"
-                  style="
-                    background: repeating-linear-gradient(
-                      0deg,
-                      transparent,
-                      transparent 2px,
-                      rgba(0, 0, 0, 0.5) 2px,
-                      rgba(0, 0, 0, 0.5) 4px
-                    );
-                  "
-                ></div>
-                <div
-                  class="absolute inset-0 pointer-events-none"
-                  style="
-                    background: radial-gradient(
-                      ellipse at center,
-                      transparent 60%,
-                      rgba(0, 0, 0, 0.4) 100%
-                    );
-                  "
-                ></div>
-                <div
-                  class="flex justify-between items-center mb-3 px-3 py-2 rounded"
-                  style="
-                    background: rgba(0, 20, 0, 0.5);
-                    border: 1px solid #0f3f0f;
-                  "
-                >
-                  <div class="flex items-center gap-6">
-                    <div class="flex items-center gap-2">
-                      <div
-                        class="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-lg shadow-red-500/80"
-                      ></div>
-                      <span
-                        class="text-red-400 text-sm font-mono font-bold tracking-wider"
-                        >�� REC</span
-                      >
-                    </div>
-                    <span class="text-green-500 text-lg font-mono font-bold"
-                      ><span id="frequency-display">10.5</span> Hz</span
-                    >
-                  </div>
-                  <div class="flex items-center gap-6 text-sm font-mono">
-                    <span class="text-yellow-400 font-bold"
-                      ><span id="amplitude-display-monitor">50</span>
-                      µV/div</span
-                    >
-                    <span class="text-cyan-400"
-                      >SAMPLE: <span class="text-cyan-300">250 Hz</span></span
-                    >
-                  </div>
-                </div>
-                <div
-                  class="relative rounded-lg overflow-hidden"
-                  style="
-                    background: #020a02;
-                    border: 3px solid #1a3a1a;
-                    box-shadow: inset 0 0 30px rgba(0, 255, 100, 0.05);
-                  "
-                >
-                  <div
-                    class="absolute inset-0"
-                    style="
-                      background-image: linear-gradient(
-                          to right,
-                          rgba(0, 255, 100, 0.08) 1px,
-                          transparent 1px
-                        ),
-                        linear-gradient(
-                          to bottom,
-                          rgba(0, 255, 100, 0.08) 1px,
-                          transparent 1px
-                        );
-                      background-size: 40px 25px;
-                    "
-                  ></div>
-                  <div
-                    class="absolute inset-0"
-                    style="
-                      background-image: linear-gradient(
-                          to right,
-                          rgba(0, 255, 100, 0.2) 1px,
-                          transparent 1px
-                        ),
-                        linear-gradient(
-                          to bottom,
-                          rgba(0, 255, 100, 0.2) 1px,
-                          transparent 1px
-                        );
-                      background-size: 200px 125px;
-                    "
-                  ></div>
-                  <div
-                    class="absolute left-0 right-0 top-1/2 h-px"
-                    style="
-                      background: linear-gradient(
-                        90deg,
-                        transparent,
-                        rgba(0, 255, 136, 0.6),
-                        transparent
-                      );
-                      box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-                    "
-                  ></div>
-                  <div
-                    class="absolute inset-0 pointer-events-none"
-                    style="box-shadow: inset 0 0 50px rgba(0, 255, 100, 0.1)"
-                  ></div>
-                  <canvas
-                    id="eeg-chart"
-                    width="800"
-                    height="250"
-                    class="w-full relative z-10"
-                  ></canvas>
-                  <div
-                    class="absolute right-3 top-0 bottom-0 flex flex-col justify-between py-4 text-xs font-mono text-green-500/80 font-bold"
-                  >
-                    <span>+100µV</span> <span>+50µV</span>
-                    <span class="text-green-400">0</span> <span>-50µV</span>
-                    <span>-100µV</span>
-                  </div>
-                </div>
-                <div
-                  class="flex justify-between items-center mt-3 px-4 py-2 rounded"
-                  style="
-                    background: linear-gradient(
-                      180deg,
-                      rgba(0, 30, 0, 0.6) 0%,
-                      rgba(0, 20, 0, 0.8) 100%
-                    );
-                    border: 2px solid #1a4a1a;
-                  "
-                >
-                  <div class="flex items-center gap-4">
-                    <span
-                      id="status-display"
-                      class="text-green-300 text-lg font-mono font-bold"
-                      style="text-shadow: 0 0 10px rgba(0, 255, 136, 0.8)"
-                      >🧘 Entspannung (Alpha)</span
-                    >
-                  </div>
-                  <div class="flex items-center gap-6 text-sm font-mono">
-                    <span class="text-green-500"
-                      >IMP:
-                      <span class="text-green-300 font-bold"
-                        >&lt;5kΩ</span
-                      ></span
-                    >
-                    <span class="text-cyan-500"
-                      >SNR:
-                      <span class="text-cyan-300 font-bold">42dB</span></span
-                    >
-                    <span
-                      class="text-amber-400 font-bold"
-                      id="time-display"
-                      style="text-shadow: 0 0 8px rgba(255, 200, 0, 0.6)"
-                      >0.0s</span
-                    >
-                  </div>
-                </div>
-              </div>
-              <div
-                class="h-3"
-                style="
-                  background: linear-gradient(180deg, #1f1f32 0%, #15152a 100%);
-                "
-              ></div>
-            </div>
-            <div class="glass-card rounded-2xl p-4 border border-purple-500/30">
-              <h3 class="font-semibold mb-4 text-purple-300">
-                📍 Elektrode auswählen
-                <span class="text-xs font-normal text-purple-400"
-                  >(10-20 System)</span
-                >
-              </h3>
-              <div class="flex justify-center">
                 <svg
-                  id="sim-electrode-map"
-                  width="340"
-                  height="380"
-                  viewbox="0 0 340 380"
-                  class="max-w-full"
+                  id="brain-svg"
+                  viewbox="0 0 600 600"
+                  class="w-full h-full max-w-2xl"
                 >
                   <defs>
-                    <radialgradient
-                      id="brainGradient"
-                      cx="50%"
-                      cy="40%"
-                      r="60%"
-                    >
-                      <stop offset="0%" stop-color="#4a5568" />
-                      <stop offset="60%" stop-color="#2d3748" />
-                      <stop offset="100%" stop-color="#1a202c" />
-                    </radialgradient>
-                    <lineargradient
-                      id="sulcusGradient"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="100%"
-                    >
-                      <stop offset="0%" stop-color="#374151" />
-                      <stop offset="100%" stop-color="#1f2937" />
-                    </lineargradient>
-                    <filter
-                      id="glow"
-                      x="-50%"
-                      y="-50%"
-                      width="200%"
-                      height="200%"
-                    >
-                      <fegaussianblur stddeviation="3" result="coloredBlur" />
+                    <filter id="glow">
+                      <fegaussianblur stddeviation="4" result="coloredBlur" />
                       <femerge>
                         <femergenode in="coloredBlur" />
                         <femergenode in="SourceGraphic" />
                       </femerge>
                     </filter>
-                    <pattern
-                      id="brainTexture"
-                      patternunits="userSpaceOnUse"
-                      width="20"
-                      height="20"
+                  </defs>
+                  <g
+                    id="brain-group"
+                    style="animation: brain-pulse 4s ease-in-out infinite"
+                  >
+                    <!-- Main brain shape -->
+                    <path
+                      d="M 200 120 Q 150 140, 130 180 Q 110 220, 120 270 Q 115 320, 130 360 Q 145 400, 180 430 Q 220 460, 270 470 Q 320 475, 360 460 Q 400 445, 430 410 Q 460 370, 470 320 Q 475 270, 465 220 Q 450 170, 420 140 Q 380 110, 330 105 Q 280 100, 230 110 Q 200 115, 200 120 Z"
+                      fill="#e8c4b8"
+                      stroke="#d4a899"
+                      stroke-width="3"
+                      opacity="0.95"
+                    />
+                    <!-- Gyri details -->
+                    <path
+                      d="M 180 140 Q 200 135, 220 140 Q 240 145, 260 140 Q 280 135, 300 140"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 300 140 Q 320 135, 340 140 Q 360 145, 380 140 Q 400 138, 415 142"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 185 165 Q 210 158, 240 163 Q 270 168, 300 163 Q 330 158, 360 163 Q 385 167, 405 165"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.8"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M 175 190 Q 200 185, 230 188 Q 260 192, 290 188 Q 320 185, 350 190 Q 380 193, 410 190"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.8"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M 170 215 Q 195 208, 225 215 Q 255 222, 285 218 Q 315 214, 345 220 Q 375 225, 410 220"
+                      fill="none"
+                      stroke="#b87d6b"
+                      stroke-width="4"
+                      opacity="0.95"
+                    />
+                    <path
+                      d="M 175 200 Q 205 195, 235 200 Q 265 205, 295 200 Q 325 196, 355 202 Q 385 206, 410 203"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 172 230 Q 202 224, 232 230 Q 262 236, 292 232 Q 322 228, 352 234 Q 382 238, 410 235"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 175 255 Q 205 248, 240 254 Q 275 260, 310 256 Q 345 252, 380 258 Q 410 262, 425 260"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.8"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M 178 280 Q 210 273, 245 279 Q 280 285, 315 281 Q 350 277, 385 283 Q 415 287, 430 285"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.8"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M 185 305 Q 220 298, 255 304 Q 290 310, 325 306 Q 360 302, 395 308 Q 420 312, 435 310"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.8"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M 140 250 Q 155 255, 165 265 Q 175 280, 170 295"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 145 275 Q 158 282, 165 295 Q 172 310, 168 325"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 150 305 Q 162 315, 168 330 Q 174 345, 172 360"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 460 250 Q 445 255, 435 265 Q 425 280, 430 295"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 455 275 Q 442 282, 435 295 Q 428 310, 432 325"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 450 305 Q 438 315, 432 330 Q 426 345, 428 360"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.5"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 195 335 Q 225 328, 260 334 Q 295 340, 330 336 Q 365 332, 400 338"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.8"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M 205 360 Q 235 353, 270 359 Q 305 365, 340 361 Q 375 357, 405 363"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.8"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M 220 390 Q 250 383, 285 389 Q 320 395, 355 391 Q 385 387, 410 393"
+                      fill="none"
+                      stroke="#c89584"
+                      stroke-width="2.8"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M 235 420 Q 265 413, 300 419 Q 335 425, 365 421"
+                      fill="none"
+                      stroke="#b87d6b"
+                      stroke-width="3.5"
+                      opacity="0.9"
+                    />
+                    <ellipse
+                      cx="280"
+                      cy="450"
+                      rx="50"
+                      ry="35"
+                      fill="#d4a899"
+                      stroke="#c89584"
+                      stroke-width="2"
+                      opacity="0.7"
+                    />
+                    <path
+                      d="M 245 445 Q 265 442, 280 445 Q 295 448, 315 445"
+                      fill="none"
+                      stroke="#b87d6b"
+                      stroke-width="1.8"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M 250 455 Q 270 452, 285 455 Q 300 458, 310 455"
+                      fill="none"
+                      stroke="#b87d6b"
+                      stroke-width="1.8"
+                      opacity="0.8"
+                    />
+                    <!-- Electrodes -->
+                    <g
+                      id="electrode-fp1"
+                      class="electrode-group"
+                      data-zone="Frontal"
+                      data-name="Fp1"
                     >
                       <circle
-                        cx="10"
-                        cy="10"
-                        r="1"
-                        fill="#4a5568"
-                        opacity="0.3"
+                        class="wave-ring"
+                        cx="220"
+                        cy="160"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
                       />
-                    </pattern>
-                  </defs>
-                  <text
-                    x="170"
-                    y="20"
-                    text-anchor="middle"
-                    fill="#94a3b8"
-                    font-size="11"
-                    font-weight="500"
-                  >
-                    NASION (Stirn)
-                  </text>
-                  <line
-                    x1="170"
-                    y1="25"
-                    x2="170"
-                    y2="45"
-                    stroke="#475569"
-                    stroke-width="1"
-                    stroke-dasharray="3,2"
-                  />
-                  <ellipse
-                    cx="170"
-                    cy="190"
-                    rx="140"
-                    ry="150"
-                    fill="url(#brainGradient)"
-                    stroke="#64748b"
-                    stroke-width="2"
-                  />
-                  <ellipse
-                    cx="170"
-                    cy="190"
-                    rx="135"
-                    ry="145"
-                    fill="url(#brainTexture)"
-                    opacity="0.5"
-                  />
-                  <path
-                    d="M 170 55 Q 170 120, 170 190 Q 170 260, 170 325"
-                    stroke="#1e293b"
-                    stroke-width="3"
-                    fill="none"
-                    opacity="0.7"
-                  />
-                  <path
-                    d="M 170 140 Q 130 160, 90 200 Q 70 220, 60 250"
-                    stroke="#1e293b"
-                    stroke-width="2"
-                    fill="none"
-                    opacity="0.5"
-                  />
-                  <path
-                    d="M 170 140 Q 210 160, 250 200 Q 270 220, 280 250"
-                    stroke="#1e293b"
-                    stroke-width="2"
-                    fill="none"
-                    opacity="0.5"
-                  />
-                  <path
-                    d="M 50 180 Q 80 190, 120 200 Q 140 205, 150 210"
-                    stroke="#1e293b"
-                    stroke-width="2"
-                    fill="none"
-                    opacity="0.4"
-                  />
-                  <path
-                    d="M 290 180 Q 260 190, 220 200 Q 200 205, 190 210"
-                    stroke="#1e293b"
-                    stroke-width="2"
-                    fill="none"
-                    opacity="0.4"
-                  />
-                  <path
-                    d="M 100 100 Q 120 130, 140 150"
-                    stroke="#1e293b"
-                    stroke-width="1.5"
-                    fill="none"
-                    opacity="0.3"
-                  />
-                  <path
-                    d="M 240 100 Q 220 130, 200 150"
-                    stroke="#1e293b"
-                    stroke-width="1.5"
-                    fill="none"
-                    opacity="0.3"
-                  />
-                  <path
-                    d="M 80 220 Q 100 240, 130 250"
-                    stroke="#1e293b"
-                    stroke-width="1.5"
-                    fill="none"
-                    opacity="0.3"
-                  />
-                  <path
-                    d="M 260 220 Q 240 240, 210 250"
-                    stroke="#1e293b"
-                    stroke-width="1.5"
-                    fill="none"
-                    opacity="0.3"
-                  />
-                  <path
-                    d="M 120 290 Q 145 310, 170 315 Q 195 310, 220 290"
-                    stroke="#1e293b"
-                    stroke-width="1.5"
-                    fill="none"
-                    opacity="0.4"
-                  />
-                  <path
-                    d="M 100 120 Q 110 115, 120 120 Q 130 125, 140 120"
-                    stroke="#475569"
-                    stroke-width="1"
-                    fill="none"
-                    opacity="0.4"
-                  />
-                  <path
-                    d="M 200 120 Q 210 115, 220 120 Q 230 125, 240 120"
-                    stroke="#475569"
-                    stroke-width="1"
-                    fill="none"
-                    opacity="0.4"
-                  />
-                  <path
-                    d="M 90 200 Q 100 195, 110 200 Q 120 205, 130 200"
-                    stroke="#475569"
-                    stroke-width="1"
-                    fill="none"
-                    opacity="0.4"
-                  />
-                  <path
-                    d="M 210 200 Q 220 195, 230 200 Q 240 205, 250 200"
-                    stroke="#475569"
-                    stroke-width="1"
-                    fill="none"
-                    opacity="0.4"
-                  />
-                  <ellipse
-                    cx="170"
-                    cy="50"
-                    rx="12"
-                    ry="8"
-                    fill="#334155"
-                    stroke="#475569"
-                    stroke-width="1"
-                  />
-                  <ellipse
-                    cx="28"
-                    cy="190"
-                    rx="10"
-                    ry="22"
-                    fill="#334155"
-                    stroke="#475569"
-                    stroke-width="1"
-                  />
-                  <ellipse
-                    cx="312"
-                    cy="190"
-                    rx="10"
-                    ry="22"
-                    fill="#334155"
-                    stroke="#475569"
-                    stroke-width="1"
-                  />
-                  <text
-                    x="28"
-                    y="230"
-                    text-anchor="middle"
-                    fill="#64748b"
-                    font-size="8"
-                  >
-                    L
-                  </text>
-                  <text
-                    x="312"
-                    y="230"
-                    text-anchor="middle"
-                    fill="#64748b"
-                    font-size="8"
-                  >
-                    R
-                  </text>
-                  <g
-                    stroke="#475569"
-                    stroke-width="1"
-                    fill="none"
-                    opacity="0.5"
-                  >
-                    <path d="M 130 85 L 130 55 L 60 55" />
-                    <path d="M 210 85 L 210 55 L 280 55" />
-                    <path d="M 90 140 L 50 140 L 50 100" />
-                    <path d="M 250 140 L 290 140 L 290 100" />
-                    <path d="M 170 130 L 170 100 L 170 70" />
-                  </g>
-                  <g
-                    id="electrode-fp1"
-                    class="electrode selected"
-                    onclick="setActiveElectrode('fp1')"
-                  >
-                    <circle
-                      cx="130"
-                      cy="85"
-                      r="8"
-                      fill="#ef4444"
-                      stroke="#fbbf24"
-                      stroke-width="2"
-                      filter="url(#glow)"
-                    />
-                    <circle cx="130" cy="85" r="4" fill="#fca5a5" />
-                    <text
-                      x="130"
-                      y="72"
-                      text-anchor="middle"
-                      fill="#f87171"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="electrode inactive"
+                        cx="220"
+                        cy="160"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="220"
+                        y="145"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        Fp1
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-fp2"
+                      class="electrode-group"
+                      data-zone="Frontal"
+                      data-name="Fp2"
                     >
-                      Fp1
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-fpz"
-                    class="electrode"
-                    onclick="setActiveElectrode('fpz')"
-                  >
-                    <circle
-                      cx="170"
-                      cy="75"
-                      r="8"
-                      fill="#f97316"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="170" cy="75" r="3" fill="#fdba74" />
-                    <text
-                      x="170"
-                      y="62"
-                      text-anchor="middle"
-                      fill="#fb923c"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="380"
+                        cy="160"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="380"
+                        cy="160"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="380"
+                        y="145"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        Fp2
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-f3"
+                      class="electrode-group"
+                      data-zone="Frontal"
+                      data-name="F3"
                     >
-                      Fpz
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-fp2"
-                    class="electrode"
-                    onclick="setActiveElectrode('fp2')"
-                  >
-                    <circle
-                      cx="210"
-                      cy="85"
-                      r="8"
-                      fill="#ef4444"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="210" cy="85" r="3" fill="#fca5a5" />
-                    <text
-                      x="210"
-                      y="72"
-                      text-anchor="middle"
-                      fill="#f87171"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="200"
+                        cy="220"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="200"
+                        cy="220"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="200"
+                        y="205"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        F3
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-fz"
+                      class="electrode-group"
+                      data-zone="Frontal"
+                      data-name="Fz"
                     >
-                      Fp2
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-f7"
-                    class="electrode"
-                    onclick="setActiveElectrode('f7')"
-                  >
-                    <circle
-                      cx="70"
-                      cy="130"
-                      r="8"
-                      fill="#f59e0b"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="70" cy="130" r="3" fill="#fcd34d" />
-                    <text
-                      x="55"
-                      y="125"
-                      text-anchor="middle"
-                      fill="#fbbf24"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="300"
+                        cy="200"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="300"
+                        cy="200"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="300"
+                        y="185"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        Fz
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-f4"
+                      class="electrode-group"
+                      data-zone="Frontal"
+                      data-name="F4"
                     >
-                      F7
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-f3"
-                    class="electrode"
-                    onclick="setActiveElectrode('f3')"
-                  >
-                    <circle
-                      cx="115"
-                      cy="125"
-                      r="8"
-                      fill="#eab308"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="115" cy="125" r="3" fill="#fde047" />
-                    <text
-                      x="115"
-                      y="112"
-                      text-anchor="middle"
-                      fill="#facc15"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="400"
+                        cy="220"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="400"
+                        cy="220"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="400"
+                        y="205"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        F4
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-c3"
+                      class="electrode-group"
+                      data-zone="Central"
+                      data-name="C3"
                     >
-                      F3
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-fz"
-                    class="electrode"
-                    onclick="setActiveElectrode('fz')"
-                  >
-                    <circle
-                      cx="170"
-                      cy="120"
-                      r="8"
-                      fill="#84cc16"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="170" cy="120" r="3" fill="#bef264" />
-                    <text
-                      x="170"
-                      y="107"
-                      text-anchor="middle"
-                      fill="#a3e635"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="180"
+                        cy="280"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="180"
+                        cy="280"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="180"
+                        y="265"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        C3
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-cz"
+                      class="electrode-group"
+                      data-zone="Central"
+                      data-name="Cz"
                     >
-                      Fz
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-f4"
-                    class="electrode"
-                    onclick="setActiveElectrode('f4')"
-                  >
-                    <circle
-                      cx="225"
-                      cy="125"
-                      r="8"
-                      fill="#eab308"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="225" cy="125" r="3" fill="#fde047" />
-                    <text
-                      x="225"
-                      y="112"
-                      text-anchor="middle"
-                      fill="#facc15"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="300"
+                        cy="270"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="300"
+                        cy="270"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="300"
+                        y="255"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        Cz
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-c4"
+                      class="electrode-group"
+                      data-zone="Central"
+                      data-name="C4"
                     >
-                      F4
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-f8"
-                    class="electrode"
-                    onclick="setActiveElectrode('f8')"
-                  >
-                    <circle
-                      cx="270"
-                      cy="130"
-                      r="8"
-                      fill="#f59e0b"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="270" cy="130" r="3" fill="#fcd34d" />
-                    <text
-                      x="285"
-                      y="125"
-                      text-anchor="middle"
-                      fill="#fbbf24"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="420"
+                        cy="280"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="420"
+                        cy="280"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="420"
+                        y="265"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        C4
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-p3"
+                      class="electrode-group"
+                      data-zone="Parietal"
+                      data-name="P3"
                     >
-                      F8
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-t3"
-                    class="electrode"
-                    onclick="setActiveElectrode('t3')"
-                  >
-                    <circle
-                      cx="50"
-                      cy="190"
-                      r="8"
-                      fill="#06b6d4"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="50" cy="190" r="3" fill="#67e8f9" />
-                    <text
-                      x="50"
-                      y="210"
-                      text-anchor="middle"
-                      fill="#22d3ee"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="200"
+                        cy="340"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="200"
+                        cy="340"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="200"
+                        y="325"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        P3
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-pz"
+                      class="electrode-group"
+                      data-zone="Parietal"
+                      data-name="Pz"
                     >
-                      T3
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-c3"
-                    class="electrode"
-                    onclick="setActiveElectrode('c3')"
-                  >
-                    <circle
-                      cx="110"
-                      cy="190"
-                      r="8"
-                      fill="#10b981"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="110" cy="190" r="3" fill="#6ee7b7" />
-                    <text
-                      x="110"
-                      y="178"
-                      text-anchor="middle"
-                      fill="#34d399"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="300"
+                        cy="340"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="300"
+                        cy="340"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="300"
+                        y="325"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        Pz
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-p4"
+                      class="electrode-group"
+                      data-zone="Parietal"
+                      data-name="P4"
                     >
-                      C3
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-cz"
-                    class="electrode"
-                    onclick="setActiveElectrode('cz')"
-                  >
-                    <circle
-                      cx="170"
-                      cy="185"
-                      r="9"
-                      fill="#3b82f6"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="170" cy="185" r="4" fill="#93c5fd" />
-                    <text
-                      x="170"
-                      y="172"
-                      text-anchor="middle"
-                      fill="#60a5fa"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="400"
+                        cy="340"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="400"
+                        cy="340"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="400"
+                        y="325"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        P4
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-t3"
+                      class="electrode-group"
+                      data-zone="Temporal"
+                      data-name="T3"
                     >
-                      Cz
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-c4"
-                    class="electrode"
-                    onclick="setActiveElectrode('c4')"
-                  >
-                    <circle
-                      cx="230"
-                      cy="190"
-                      r="8"
-                      fill="#10b981"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="230" cy="190" r="3" fill="#6ee7b7" />
-                    <text
-                      x="230"
-                      y="178"
-                      text-anchor="middle"
-                      fill="#34d399"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="150"
+                        cy="280"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="150"
+                        cy="280"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="150"
+                        y="265"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        T3
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-t4"
+                      class="electrode-group"
+                      data-zone="Temporal"
+                      data-name="T4"
                     >
-                      C4
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-t4"
-                    class="electrode"
-                    onclick="setActiveElectrode('t4')"
-                  >
-                    <circle
-                      cx="290"
-                      cy="190"
-                      r="8"
-                      fill="#06b6d4"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="290" cy="190" r="3" fill="#67e8f9" />
-                    <text
-                      x="290"
-                      y="210"
-                      text-anchor="middle"
-                      fill="#22d3ee"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="450"
+                        cy="280"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="450"
+                        cy="280"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="450"
+                        y="265"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        T4
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-o1"
+                      class="electrode-group"
+                      data-zone="Occipital"
+                      data-name="O1"
                     >
-                      T4
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-t5"
-                    class="electrode"
-                    onclick="setActiveElectrode('t5')"
-                  >
-                    <circle
-                      cx="70"
-                      cy="255"
-                      r="8"
-                      fill="#8b5cf6"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="70" cy="255" r="3" fill="#c4b5fd" />
-                    <text
-                      x="55"
-                      y="260"
-                      text-anchor="middle"
-                      fill="#a78bfa"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
+                      <circle
+                        class="wave-ring"
+                        cx="250"
+                        cy="420"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="250"
+                        cy="420"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="250"
+                        y="405"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        O1
+                      </text>
+                    </g>
+                    <g
+                      id="electrode-o2"
+                      class="electrode-group"
+                      data-zone="Occipital"
+                      data-name="O2"
                     >
-                      T5
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-p3"
-                    class="electrode"
-                    onclick="setActiveElectrode('p3')"
-                  >
-                    <circle
-                      cx="115"
-                      cy="250"
-                      r="8"
-                      fill="#a855f7"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="115" cy="250" r="3" fill="#d8b4fe" />
-                    <text
-                      x="115"
-                      y="238"
-                      text-anchor="middle"
-                      fill="#c084fc"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
-                    >
-                      P3
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-pz"
-                    class="electrode"
-                    onclick="setActiveElectrode('pz')"
-                  >
-                    <circle
-                      cx="170"
-                      cy="245"
-                      r="8"
-                      fill="#d946ef"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="170" cy="245" r="3" fill="#f0abfc" />
-                    <text
-                      x="170"
-                      y="233"
-                      text-anchor="middle"
-                      fill="#e879f9"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
-                    >
-                      Pz
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-p4"
-                    class="electrode"
-                    onclick="setActiveElectrode('p4')"
-                  >
-                    <circle
-                      cx="225"
-                      cy="250"
-                      r="8"
-                      fill="#a855f7"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="225" cy="250" r="3" fill="#d8b4fe" />
-                    <text
-                      x="225"
-                      y="238"
-                      text-anchor="middle"
-                      fill="#c084fc"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
-                    >
-                      P4
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-t6"
-                    class="electrode"
-                    onclick="setActiveElectrode('t6')"
-                  >
-                    <circle
-                      cx="270"
-                      cy="255"
-                      r="8"
-                      fill="#8b5cf6"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="270" cy="255" r="3" fill="#c4b5fd" />
-                    <text
-                      x="285"
-                      y="260"
-                      text-anchor="middle"
-                      fill="#a78bfa"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
-                    >
-                      T6
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-o1"
-                    class="electrode"
-                    onclick="setActiveElectrode('o1')"
-                  >
-                    <circle
-                      cx="130"
-                      cy="305"
-                      r="8"
-                      fill="#6366f1"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="130" cy="305" r="3" fill="#a5b4fc" />
-                    <text
-                      x="130"
-                      y="322"
-                      text-anchor="middle"
-                      fill="#818cf8"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
-                    >
-                      O1
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-oz"
-                    class="electrode"
-                    onclick="setActiveElectrode('oz')"
-                  >
-                    <circle
-                      cx="170"
-                      cy="315"
-                      r="8"
-                      fill="#4f46e5"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="170" cy="315" r="3" fill="#a5b4fc" />
-                    <text
-                      x="170"
-                      y="332"
-                      text-anchor="middle"
-                      fill="#818cf8"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
-                    >
-                      Oz
-                    </text>
-                  </g>
-                  <g
-                    id="electrode-o2"
-                    class="electrode"
-                    onclick="setActiveElectrode('o2')"
-                  >
-                    <circle
-                      cx="210"
-                      cy="305"
-                      r="8"
-                      fill="#6366f1"
-                      stroke="#fff"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="210" cy="305" r="3" fill="#a5b4fc" />
-                    <text
-                      x="210"
-                      y="322"
-                      text-anchor="middle"
-                      fill="#818cf8"
-                      font-size="9"
-                      font-weight="600"
-                      style="pointer-events: none"
-                    >
-                      O2
-                    </text>
-                  </g>
-                  <text
-                    x="170"
-                    y="360"
-                    text-anchor="middle"
-                    fill="#94a3b8"
-                    font-size="11"
-                    font-weight="500"
-                  >
-                    INION (Hinterkopf)
-                  </text>
-                  <line
-                    x1="170"
-                    y1="340"
-                    x2="170"
-                    y2="350"
-                    stroke="#475569"
-                    stroke-width="1"
-                    stroke-dasharray="3,2"
-                  />
-                  <g transform="translate(0, 365)">
-                    <rect
-                      x="5"
-                      y="0"
-                      width="330"
-                      height="12"
-                      fill="#1e293b"
-                      rx="3"
-                    />
-                    <text
-                      x="170"
-                      y="9"
-                      text-anchor="middle"
-                      fill="#64748b"
-                      font-size="8"
-                    >
-                      Fp=Frontopolar | F=Frontal | C=Central | P=Parietal |
-                      O=Occipital | T=Temporal
-                    </text>
+                      <circle
+                        class="wave-ring"
+                        cx="350"
+                        cy="420"
+                        r="5"
+                        fill="none"
+                        stroke-width="2"
+                      />
+                      <circle
+                        class="electrode inactive"
+                        cx="350"
+                        cy="420"
+                        r="8"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="350"
+                        y="405"
+                        text-anchor="middle"
+                        font-size="12"
+                        font-weight="bold"
+                        opacity="0.8"
+                      >
+                        O2
+                      </text>
+                    </g>
                   </g>
                 </svg>
               </div>
-              <div
-                class="mt-4 p-3 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg border border-purple-500/50"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div
-                      class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-purple-400 flex items-center justify-center shadow-lg shadow-purple-500/30"
+              <div class="mt-6 flex flex-wrap gap-4 justify-center text-sm">
+                <div class="flex items-center gap-2">
+                  <div class="w-4 h-4 rounded-full" id="legend-frontal"></div>
+                  <span>Frontal</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-4 h-4 rounded-full" id="legend-central"></div>
+                  <span>Central</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-4 h-4 rounded-full" id="legend-parietal"></div>
+                  <span>Parietal</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-4 h-4 rounded-full" id="legend-temporal"></div>
+                  <span>Temporal</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-4 h-4 rounded-full" id="legend-occipital"></div>
+                  <span>Occipital</span>
+                </div>
+              </div>
+            </div>
+            <!-- Side Panel -->
+            <div class="space-y-6">
+              <div class="rounded-xl shadow-xl p-6">
+                <h3 class="text-xl font-bold mb-4">Echtzeit-Informationen</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-sm font-semibold opacity-70"
+                      >Aktive Zone</label
                     >
-                      <span
-                        id="electrode-icon"
-                        class="text-sm text-white font-bold"
-                        >Fp</span
-                      >
+                    <div id="active-zone" class="text-2xl font-bold mt-1">
+                      --
                     </div>
-                    <div>
-                      <div class="text-sm text-purple-400">
-                        Aktive Elektrode
-                      </div>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold opacity-70"
+                      >Elektrode</label
+                    >
+                    <div
+                      id="active-electrode"
+                      class="text-xl font-mono font-bold mt-1"
+                    >
+                      --
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold opacity-70"
+                      >Signalstärke</label
+                    >
+                    <div class="flex gap-1 mt-2" id="signal-bars">
                       <div
-                        id="electrode-display"
-                        class="text-lg font-bold text-purple-200"
-                      >
-                        Fp1
-                      </div>
+                        class="signal-bar flex-1 rounded"
+                        style="animation-delay: 0s"
+                      ></div>
+                      <div
+                        class="signal-bar flex-1 rounded"
+                        style="animation-delay: 0.1s"
+                      ></div>
+                      <div
+                        class="signal-bar flex-1 rounded"
+                        style="animation-delay: 0.2s"
+                      ></div>
+                      <div
+                        class="signal-bar flex-1 rounded"
+                        style="animation-delay: 0.3s"
+                      ></div>
+                      <div
+                        class="signal-bar flex-1 rounded"
+                        style="animation-delay: 0.4s"
+                      ></div>
+                      <div
+                        class="signal-bar flex-1 rounded"
+                        style="animation-delay: 0.5s"
+                      ></div>
+                      <div
+                        class="signal-bar flex-1 rounded"
+                        style="animation-delay: 0.6s"
+                      ></div>
+                      <div
+                        class="signal-bar flex-1 rounded"
+                        style="animation-delay: 0.7s"
+                      ></div>
                     </div>
                   </div>
-                  <div class="text-right">
-                    <div class="text-xs text-pink-400">Bereich</div>
-                    <div id="electrode-region" class="text-sm text-pink-300">
-                      Frontopolar Links
+                  <div>
+                    <label class="text-sm font-semibold opacity-70"
+                      >Dominante Frequenz</label
+                    >
+                    <div
+                      id="frequency-display"
+                      class="text-xl font-mono font-bold mt-1"
+                    >
+                      -- Hz
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <!-- SECCIÓN ARDUINO -->
-      <section id="section-arduino" class="section">
-        <div class="glass-card rounded-2xl p-8 mb-8">
-          <h1 class="text-3xl md:text-4xl font-bold text-slate-200 mb-4">
-            EEG mit Arduino
-          </h1>
-          <p class="text-xl text-slate-400">
-            Wie man ein einfaches EEG zum Lernen baut
-          </p>
-        </div>
-        <div
-          class="bg-slate-800/50 border border-slate-600 rounded-lg p-4 mb-6"
-        >
-          <div class="flex items-start gap-3">
-            <div
-              class="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-slate-400 text-xs flex-shrink-0"
-            >
-              !
-            </div>
-            <div>
-              <h4 class="font-semibold text-slate-300 mb-1">
-                SICHERHEITSWARNUNG
-              </h4>
-              <p class="text-slate-400">
-                Dieses Projekt ist
-                <strong class="text-slate-300">nur für Bildungszwecke</strong>.
-                NICHT für medizinische Diagnosen verwenden. Verwenden Sie immer
-                USB- oder Batteriestrom, niemals Netzstrom.
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div class="guide-card border-l-slate-500 rounded-2xl p-6">
-            <h3 class="text-xl font-semibold text-slate-300 mb-4">
-              Komponenten
-            </h3>
-            <div class="space-y-3">
-              <div
-                class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
-              >
-                <div
-                  class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center text-slate-400 text-xs"
-                >
-                  MCU
-                </div>
-                <div>
-                  <div class="font-semibold text-slate-300">
-                    Arduino Uno/Nano
-                  </div>
-                  <div class="text-sm text-slate-500">~5-15 €</div>
-                </div>
-              </div>
-              <div
-                class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
-              >
-                <div
-                  class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center text-slate-400 text-xs"
-                >
-                  AMP
-                </div>
-                <div>
-                  <div class="font-semibold text-slate-300">AD8232-Modul</div>
-                  <div class="text-sm text-slate-500">Verstärker (~8-12 €)</div>
-                </div>
-              </div>
-              <div
-                class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
-              >
-                <div
-                  class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center text-slate-400 text-xs"
-                >
-                  EL
-                </div>
-                <div>
-                  <div class="font-semibold text-slate-300">
-                    Einwegelektroden
-                  </div>
-                  <div class="text-sm text-slate-500">EKG-Typ (~5-10 €)</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="guide-card border-l-slate-500 rounded-2xl p-6">
-            <h3 class="text-xl font-semibold text-slate-300 mb-4">
-              Verbindung AD8232 → Arduino
-            </h3>
-            <div
-              class="bg-slate-900/50 rounded-lg p-4 font-mono text-sm border border-slate-700"
-            >
-              <div class="space-y-2 text-slate-400">
-                <div
-                  class="flex justify-between border-b border-slate-700 pb-1"
-                >
-                  <span>GND</span><span class="text-slate-600">→</span
-                  ><span class="text-slate-300">GND</span>
-                </div>
-                <div
-                  class="flex justify-between border-b border-slate-700 pb-1"
-                >
-                  <span>3.3V</span><span class="text-slate-600">→</span
-                  ><span class="text-slate-300">3.3V</span>
-                </div>
-                <div
-                  class="flex justify-between border-b border-slate-700 pb-1"
-                >
-                  <span>OUTPUT</span><span class="text-slate-600">→</span
-                  ><span class="text-slate-300">A0</span>
-                </div>
-                <div
-                  class="flex justify-between border-b border-slate-700 pb-1"
-                >
-                  <span>LO-</span><span class="text-slate-600">→</span
-                  ><span class="text-slate-300">D2</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>LO+</span><span class="text-slate-600">→</span
-                  ><span class="text-slate-300">D3</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="guide-card border-l-slate-500 rounded-2xl p-6">
-          <h3 class="text-xl font-semibold text-slate-300 mb-4">
-            Arduino-Code
-          </h3>
-          <div class="code-block overflow-x-auto">
-            <pre
-              class="text-sm"
-            ><code><span class="text-slate-500">// EINFACHER EEG-SIMULATOR - NUR FÜR BILDUNGSZWECKE</span>
-
-<span class="text-purple-400">const int</span> PIN_EEG = A0;
-<span class="text-purple-400">const int</span> PIN_LO_MINUS = 2;
-<span class="text-purple-400">const int</span> PIN_LO_PLUS = 3;
-
-<span class="text-cyan-400">void</span> <span class="text-amber-400">setup</span>() {
-    Serial.<span class="text-amber-400">begin</span>(115200);
-    <span class="text-amber-400">pinMode</span>(PIN_LO_MINUS, INPUT);
-    <span class="text-amber-400">pinMode</span>(PIN_LO_PLUS, INPUT);
-}
-
-<span class="text-cyan-400">void</span> <span class="text-amber-400">loop</span>() {
-    <span class="text-purple-400">if</span> (<span class="text-amber-400">digitalRead</span>(PIN_LO_MINUS) == 1 || 
-        <span class="text-amber-400">digitalRead</span>(PIN_LO_PLUS) == 1) {
-        Serial.<span class="text-amber-400">println</span>(<span class="text-emerald-400">"!"</span>); <span class="text-slate-500">// Elektrode getrennt</span>
-    } <span class="text-purple-400">else</span> {
-        Serial.<span class="text-amber-400">println</span>(<span class="text-amber-400">analogRead</span>(PIN_EEG));
-    }
-    <span class="text-amber-400">delay</span>(4); <span class="text-slate-500">// ~250 Hz</span>
-}</code></pre>
-          </div>
-        </div>
-      </section>
-      <!-- SECCIÓN BIBLIOGRAFÍA -->
-      <section id="section-bibliografia" class="section">
-        <div class="glass-card rounded-2xl p-8 mb-8">
-          <h1 class="text-3xl md:text-4xl font-bold text-slate-200 mb-4">
-            Literatur und Ressourcen
-          </h1>
-          <p class="text-xl text-slate-400">
-            Wo Sie mehr über EEG und Neurowissenschaften lernen können
-          </p>
-        </div>
-        <div class="guide-card border-l-slate-500 rounded-2xl p-6 mb-6">
-          <h2 class="text-2xl font-bold text-slate-300 mb-6">
-            Empfohlene Bücher
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-14 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 flex-shrink-0 border border-slate-600"
-                >
-                  REF
-                </div>
-                <div>
-                  <h4 class="font-bold text-slate-300 mb-1">
-                    Niedermeyer's Electroencephalography
-                  </h4>
-                  <p class="text-sm text-slate-400 mb-2">
-                    Schomer &amp; Lopes da Silva
-                  </p>
-                  <p class="text-xs text-slate-500">
-                    Die "Bibel" des EEG. Vollständige Referenz für Fachleute.
-                  </p>
-                  <span
-                    class="inline-block mt-2 px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                    >Fortgeschritten</span
+              <div class="rounded-xl shadow-xl p-6">
+                <h3 class="text-xl font-bold mb-4">Aktivierung nach Zone</h3>
+                <div class="space-y-2">
+                  <button
+                    class="zone-btn w-full px-4 py-3 rounded-lg font-semibold transition hover:scale-105"
+                    data-zone="Frontal"
                   >
-                </div>
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-14 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 flex-shrink-0 border border-slate-600"
-                >
-                  SIG
-                </div>
-                <div>
-                  <h4 class="font-bold text-slate-300 mb-1">
-                    Analyzing Neural Time Series Data
-                  </h4>
-                  <p class="text-sm text-slate-400 mb-2">Mike X Cohen</p>
-                  <p class="text-xs text-slate-500">
-                    Das beste Buch für EEG-Signalanalyse mit MATLAB/Python.
-                  </p>
-                  <span
-                    class="inline-block mt-2 px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                    >Mittelstufe</span
+                    🧠 Frontal
+                  </button>
+                  <button
+                    class="zone-btn w-full px-4 py-3 rounded-lg font-semibold transition hover:scale-105"
+                    data-zone="Central"
                   >
-                </div>
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-14 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 flex-shrink-0 border border-slate-600"
-                >
-                  INT
-                </div>
-                <div>
-                  <h4 class="font-bold text-slate-300 mb-1">
-                    Das Gehirn: Ein Benutzerhandbuch
-                  </h4>
-                  <p class="text-sm text-slate-400 mb-2">David Eagleman</p>
-                  <p class="text-xs text-slate-500">
-                    Faszinierende Einführung ins Gehirn. Perfekt für Anfänger.
-                    Auf Deutsch verfügbar.
-                  </p>
-                  <span
-                    class="inline-block mt-2 px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                    >Anfänger</span
+                    ⚡ Zentral
+                  </button>
+                  <button
+                    class="zone-btn w-full px-4 py-3 rounded-lg font-semibold transition hover:scale-105"
+                    data-zone="Parietal"
                   >
-                </div>
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-14 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 flex-shrink-0 border border-slate-600"
-                >
-                  NEU
-                </div>
-                <div>
-                  <h4 class="font-bold text-slate-300 mb-1">
-                    Principles of Neural Science
-                  </h4>
-                  <p class="text-sm text-slate-400 mb-2">
-                    Kandel, Schwartz &amp; Jessell
-                  </p>
-                  <p class="text-xs text-slate-500">
-                    Das Standardwerk der Neurowissenschaft. Sehr umfassend.
-                  </p>
-                  <span
-                    class="inline-block mt-2 px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                    >Fortgeschritten</span
+                    🎯 Parietal
+                  </button>
+                  <button
+                    class="zone-btn w-full px-4 py-3 rounded-lg font-semibold transition hover:scale-105"
+                    data-zone="Temporal"
                   >
+                    👂 Temporal
+                  </button>
+                  <button
+                    class="zone-btn w-full px-4 py-3 rounded-lg font-semibold transition hover:scale-105"
+                    data-zone="Occipital"
+                  >
+                    👁️ Okzipital
+                  </button>
                 </div>
+              </div>
+              <div class="rounded-xl shadow-xl p-6">
+                <h3 class="text-xl font-bold mb-3">Zonenfunktionen</h3>
+                <p
+                  id="zone-description"
+                  class="text-sm leading-relaxed opacity-80"
+                >
+                  Klicken Sie auf eine Elektrode oder wählen Sie eine Zone, um
+                  detaillierte Informationen über die Gehirnfunktionen zu sehen.
+                </p>
               </div>
             </div>
           </div>
         </div>
-        <div class="guide-card border-l-slate-500 rounded-2xl p-6 mb-6">
-          <h2 class="text-2xl font-bold text-slate-300 mb-6">
-            Websites und Datenbanken
-          </h2>
-          <div class="space-y-3">
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 border border-slate-700"
-            >
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-10 h-10 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 border border-slate-600"
-                >
-                  DB
-                </div>
-                <div class="flex-1">
-                  <h4 class="font-bold text-slate-300">OpenNeuro</h4>
-                  <p class="text-sm text-slate-500">
-                    Tausende kostenlose echte EEG-Aufzeichnungen für Forschung
-                  </p>
-                  <p class="text-xs text-slate-400 mt-1">openneuro.org</p>
-                </div>
-                <span
-                  class="px-3 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos</span
-                >
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 border border-slate-700"
-            >
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-10 h-10 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 border border-slate-600"
-                >
-                  DB
-                </div>
-                <div class="flex-1">
-                  <h4 class="font-bold text-slate-300">PhysioNet</h4>
-                  <p class="text-sm text-slate-500">
-                    Kostenlose physiologische Signale (EEG, EKG, EMG)
-                  </p>
-                  <p class="text-xs text-slate-400 mt-1">physionet.org</p>
-                </div>
-                <span
-                  class="px-3 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos</span
-                >
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 border border-slate-700"
-            >
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-10 h-10 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 border border-slate-600"
-                >
-                  COM
-                </div>
-                <div class="flex-1">
-                  <h4 class="font-bold text-slate-300">NeuroTechX</h4>
-                  <p class="text-sm text-slate-500">
-                    Globale Neurotechnologie-Community mit Ressourcen und Events
-                  </p>
-                  <p class="text-xs text-slate-400 mt-1">neurotechx.com</p>
-                </div>
-                <span
-                  class="px-3 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Community</span
-                >
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 border border-slate-700"
-            >
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-10 h-10 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 border border-slate-600"
-                >
-                  HW
-                </div>
-                <div class="flex-1">
-                  <h4 class="font-bold text-slate-300">OpenBCI</h4>
-                  <p class="text-sm text-slate-500">
-                    Open-Source Hardware und Software für EEG. Ideal für Maker
-                  </p>
-                  <p class="text-xs text-slate-400 mt-1">openbci.com</p>
-                </div>
-                <span
-                  class="px-3 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Hardware</span
-                >
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 border border-slate-700"
-            >
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-10 h-10 bg-slate-700 rounded flex items-center justify-center text-xs text-slate-400 border border-slate-600"
-                >
-                  SW
-                </div>
-                <div class="flex-1">
-                  <h4 class="font-bold text-slate-300">SCCN - EEGLAB</h4>
-                  <p class="text-sm text-slate-500">
-                    Kostenlose Software für EEG-Analyse (MATLAB)
-                  </p>
-                  <p class="text-xs text-slate-400 mt-1">
-                    sccn.ucsd.edu/eeglab
-                  </p>
-                </div>
-                <span
-                  class="px-3 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Software</span
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="guide-card border-l-slate-500 rounded-2xl p-6 mb-6">
-          <h2 class="text-2xl font-bold text-slate-300 mb-6">Online-Kurse</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-sm text-slate-400 font-medium">Coursera</span>
-              </div>
-              <h4 class="font-bold text-slate-300 mb-2">
-                Computational Neuroscience
-              </h4>
-              <p class="text-sm text-slate-500 mb-3">
-                University of Washington. Grundlagen der computationalen
-                Neurowissenschaft.
-              </p>
-              <div class="flex gap-2">
-                <span
-                  class="px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos (Audit)</span
-                >
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-sm text-slate-400 font-medium">Coursera</span>
-              </div>
-              <h4 class="font-bold text-slate-300 mb-2">
-                Medical Neuroscience
-              </h4>
-              <p class="text-sm text-slate-500 mb-3">
-                Duke University. Vollständige Neuroanatomie und
-                Neurophysiologie.
-              </p>
-              <div class="flex gap-2">
-                <span
-                  class="px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos (Audit)</span
-                >
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-sm text-slate-400 font-medium">Udemy</span>
-              </div>
-              <h4 class="font-bold text-slate-300 mb-2">
-                Neural Signal Processing
-              </h4>
-              <p class="text-sm text-slate-500 mb-3">
-                Mike X Cohen. EEG-Signalanalyse mit MATLAB und Python.
-              </p>
-              <div class="flex gap-2">
-                <span
-                  class="px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >~15-50€</span
-                >
-              </div>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-sm text-slate-400 font-medium">edX</span>
-              </div>
-              <h4 class="font-bold text-slate-300 mb-2">
-                Fundamentals of Neuroscience
-              </h4>
-              <p class="text-sm text-slate-500 mb-3">
-                Harvard University. Serie von 3 Kursen über das Gehirn.
-              </p>
-              <div class="flex gap-2">
-                <span
-                  class="px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos (Audit)</span
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="guide-card border-l-slate-500 rounded-2xl p-6 mb-6">
-          <h2 class="text-2xl font-bold text-slate-300 mb-6">YouTube-Kanäle</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 text-center border border-slate-700"
-            >
-              <div
-                class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-xs text-slate-400 mx-auto mb-3 border border-slate-600"
-              >
-                SIG
-              </div>
-              <h4 class="font-bold text-slate-300 mb-1">Mike X Cohen</h4>
-              <p class="text-xs text-slate-500 mb-2">
-                Analyse neuronaler Signale. Sehr technisch und detailliert.
-              </p>
-              <span class="text-xs text-slate-500">Auf Englisch</span>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 text-center border border-slate-700"
-            >
-              <div
-                class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-xs text-slate-400 mx-auto mb-3 border border-slate-600"
-              >
-                BCI
-              </div>
-              <h4 class="font-bold text-slate-300 mb-1">Neurotech@Berkeley</h4>
-              <p class="text-xs text-slate-500 mb-2">
-                BCI-Tutorials und Projekte mit EEG.
-              </p>
-              <span class="text-xs text-slate-500">Auf Englisch</span>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 text-center border border-slate-700"
-            >
-              <div
-                class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-xs text-slate-400 mx-auto mb-3 border border-slate-600"
-              >
-                DIY
-              </div>
-              <h4 class="font-bold text-slate-300 mb-1">OpenBCI</h4>
-              <p class="text-xs text-slate-500 mb-2">
-                Hardware- und Software-Tutorials für DIY-EEG.
-              </p>
-              <span class="text-xs text-slate-500">Auf Englisch</span>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 text-center border border-slate-700"
-            >
-              <div
-                class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-xs text-slate-400 mx-auto mb-3 border border-slate-600"
-              >
-                DE
-              </div>
-              <h4 class="font-bold text-slate-300 mb-1">Breaking Lab</h4>
-              <p class="text-xs text-slate-500 mb-2">
-                Wissenschaft und Technik. Videos über Neurotechnologie.
-              </p>
-              <span class="text-xs text-slate-400">Auf Deutsch</span>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 text-center border border-slate-700"
-            >
-              <div
-                class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-xs text-slate-400 mx-auto mb-3 border border-slate-600"
-              >
-                DE
-              </div>
-              <h4 class="font-bold text-slate-300 mb-1">maiLab</h4>
-              <p class="text-xs text-slate-500 mb-2">
-                Wissenschaft einfach erklärt. Gute Videos über das Gehirn.
-              </p>
-              <span class="text-xs text-slate-400">Auf Deutsch</span>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-4 text-center border border-slate-700"
-            >
-              <div
-                class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-xs text-slate-400 mx-auto mb-3 border border-slate-600"
-              >
-                EDU
-              </div>
-              <h4 class="font-bold text-slate-300 mb-1">
-                Neuroscientifically Challenged
-              </h4>
-              <p class="text-xs text-slate-500 mb-2">
-                Neurowissenschaftliche Konzepte einfach erklärt.
-              </p>
-              <span class="text-xs text-slate-500">Auf Englisch</span>
-            </div>
-          </div>
-        </div>
-        <div class="guide-card border-l-slate-500 rounded-2xl p-6 mb-6">
-          <h2 class="text-2xl font-bold text-slate-300 mb-6">
-            Software für EEG-Analyse
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="font-bold text-slate-300">EEGLAB</h4>
-                <span
-                  class="px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos</span
-                >
-              </div>
-              <p class="text-sm text-slate-500 mb-2">
-                MATLAB-Toolbox für EEG-Analyse. Am häufigsten in der Forschung
-                verwendet.
-              </p>
-              <p class="text-xs text-slate-400">sccn.ucsd.edu/eeglab</p>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="font-bold text-slate-300">MNE-Python</h4>
-                <span
-                  class="px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos</span
-                >
-              </div>
-              <p class="text-sm text-slate-500 mb-2">
-                Python-Bibliothek für EEG/MEG-Analyse. Sehr aktive Community.
-              </p>
-              <p class="text-xs text-slate-400">mne.tools</p>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="font-bold text-slate-300">Brainstorm</h4>
-                <span
-                  class="px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos</span
-                >
-              </div>
-              <p class="text-sm text-slate-500 mb-2">
-                Kollaborative Software für MEG/EEG-Analyse.
-              </p>
-              <p class="text-xs text-slate-400">
-                neuroimage.usc.edu/brainstorm
-              </p>
-            </div>
-            <div
-              class="resource-card bg-slate-800/50 rounded-lg p-5 border border-slate-700"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="font-bold text-slate-300">OpenViBE</h4>
-                <span
-                  class="px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded"
-                  >Kostenlos</span
-                >
-              </div>
-              <p class="text-sm text-slate-500 mb-2">
-                Plattform für Echtzeit-BCIs. Visuell und einfach zu bedienen.
-              </p>
-              <p class="text-xs text-slate-400">openvibe.inria.fr</p>
-            </div>
-          </div>
-        </div>
-        <div class="bg-slate-800/30 border border-slate-700 rounded-lg p-4">
-          <div class="flex items-start gap-3">
-            <div
-              class="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-slate-400 text-xs flex-shrink-0"
-            >
-              i
-            </div>
-            <div>
-              <h4 class="font-semibold text-slate-400 mb-2">
-                Wo wissenschaftliche Artikel finden
-              </h4>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                <div
-                  class="bg-slate-800/50 rounded-lg p-3 border border-slate-700"
-                >
-                  <div class="font-semibold text-slate-300">PubMed</div>
-                  <div class="text-xs text-slate-500">
-                    pubmed.ncbi.nlm.nih.gov
-                  </div>
-                  <div class="text-xs text-slate-500 mt-1">
-                    Biomedizinische Datenbank
-                  </div>
-                </div>
-                <div
-                  class="bg-slate-800/50 rounded-lg p-3 border border-slate-700"
-                >
-                  <div class="font-semibold text-slate-300">Google Scholar</div>
-                  <div class="text-xs text-slate-500">scholar.google.com</div>
-                  <div class="text-xs text-slate-500 mt-1">
-                    Akademische Suchmaschine
-                  </div>
-                </div>
-                <div
-                  class="bg-slate-800/50 rounded-lg p-3 border border-slate-700"
-                >
-                  <div class="font-semibold text-slate-300">arXiv</div>
-                  <div class="text-xs text-slate-500">arxiv.org</div>
-                  <div class="text-xs text-slate-500 mt-1">
-                    Kostenlose Preprints
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
     </main>
     <script>
       const defaultConfig = {
-        app_title: "EEG Simulator",
+        background_color: "#0a0e27",
+        surface_color: "#1e293b",
+        text_color: "#f1f5f9",
+        primary_action_color: "#3b82f6",
+        secondary_action_color: "#10b981",
+        font_family: "system-ui",
+        font_size: 16,
+        platform_title: "🧠 EEG-Gehirnplattform",
+        platform_subtitle:
+          "Full-Stack Webplattform für EEG und Zerebrale VR-Simulation",
+        menu_realtime: "Echtzeit-Analyse",
+        menu_vr: "VR-Simulation",
+        menu_electrodes: "Elektrodenkarte",
+        menu_history: "Sitzungsverlauf",
       };
 
-      let config = { ...defaultConfig };
-      let isRunning = false;
-      let currentWaveType = "alpha";
-      let amplitude = 50;
-      let noiseLevel = 10;
-      let time = 0;
-      let animationId;
-      let eegData = [];
-      let maxDataPoints = 400;
-      let activeElectrode = "fp1";
-
-      const waveTypes = {
-        alpha: {
-          freq: 10.5,
-          name: "🧘 Entspannung (Alpha)",
-          color: "#00ff88",
-          glow: "rgba(0,255,136,0.8)",
-        },
-        beta: {
-          freq: 20,
-          name: "🎯 Konzentration (Beta)",
-          color: "#00d4ff",
-          glow: "rgba(0,212,255,0.8)",
-        },
-        theta: {
-          freq: 6,
-          name: "🌙 Schläfrigkeit (Theta)",
-          color: "#bf7fff",
-          glow: "rgba(191,127,255,0.8)",
-        },
-        delta: {
-          freq: 2,
-          name: "😴 Tiefschlaf (Delta)",
-          color: "#6366f1",
-          glow: "rgba(99,102,241,0.8)",
-        },
-        adhd: {
-          freq: 5,
-          name: "⚡ Schwere ADHS",
-          color: "#ff4444",
-          glow: "rgba(255,68,68,0.9)",
-        },
+      const zoneColors = {
+        Frontal: "#3b82f6",
+        Central: "#10b981",
+        Parietal: "#f59e0b",
+        Temporal: "#ec4899",
+        Occipital: "#8b5cf6",
       };
 
-      const electrodes = {
-        fp1: {
-          name: "Fp1",
-          modifier: 1.1,
-          region: "Frontopolar Links",
-          icon: "Fp",
-        },
-        fpz: {
-          name: "Fpz",
-          modifier: 1.1,
-          region: "Frontopolar Mitte",
-          icon: "Fp",
-        },
-        fp2: {
-          name: "Fp2",
-          modifier: 1.1,
-          region: "Frontopolar Rechts",
-          icon: "Fp",
-        },
-        f7: { name: "F7", modifier: 1.0, region: "Frontal Links", icon: "F" },
-        f3: { name: "F3", modifier: 1.0, region: "Frontal Links", icon: "F" },
-        fz: { name: "Fz", modifier: 1.0, region: "Frontal Mitte", icon: "F" },
-        f4: { name: "F4", modifier: 1.0, region: "Frontal Rechts", icon: "F" },
-        f8: { name: "F8", modifier: 1.0, region: "Frontal Rechts", icon: "F" },
-        t3: { name: "T3", modifier: 0.9, region: "Temporal Links", icon: "T" },
-        c3: { name: "C3", modifier: 1.0, region: "Zentral Links", icon: "C" },
-        cz: {
-          name: "Cz",
-          modifier: 0.9,
-          region: "Zentral (Vertex)",
-          icon: "C",
-        },
-        c4: { name: "C4", modifier: 1.0, region: "Zentral Rechts", icon: "C" },
-        t4: { name: "T4", modifier: 0.9, region: "Temporal Rechts", icon: "T" },
-        t5: {
-          name: "T5",
-          modifier: 0.8,
-          region: "Temporal-Parietal Links",
-          icon: "T",
-        },
-        p3: { name: "P3", modifier: 0.85, region: "Parietal Links", icon: "P" },
-        pz: { name: "Pz", modifier: 0.85, region: "Parietal Mitte", icon: "P" },
-        p4: {
-          name: "P4",
-          modifier: 0.85,
-          region: "Parietal Rechts",
-          icon: "P",
-        },
-        t6: {
-          name: "T6",
-          modifier: 0.8,
-          region: "Temporal-Parietal Rechts",
-          icon: "T",
-        },
-        o1: { name: "O1", modifier: 0.7, region: "Okzipital Links", icon: "O" },
-        oz: { name: "Oz", modifier: 0.7, region: "Okzipital Mitte", icon: "O" },
-        o2: {
-          name: "O2",
-          modifier: 0.7,
-          region: "Okzipital Rechts",
-          icon: "O",
-        },
+      const zoneDescriptions = {
+        Frontal:
+          "Steuert exekutive Funktionen, Entscheidungsfindung, Planung und Persönlichkeit. Wesentlich für komplexes Denken und willkürliche motorische Kontrolle.",
+        Central:
+          "Sensorische und motorische Verarbeitung. Der Zentralsulcus trennt Frontal- und Parietallappen und steuert Bewegung und taktile Empfindung.",
+        Parietal:
+          "Sensorische Integration, räumliche Wahrnehmung und mathematische Verarbeitung. Vereint Informationen aus verschiedenen Sinnen.",
+        Temporal:
+          "Auditive Verarbeitung, Gedächtnis und Sprachverständnis. Entscheidend für Gesichtserkennung und Emotionen.",
+        Occipital:
+          "Primäre visuelle Verarbeitung. Interpretiert Informationen von den Augen, einschließlich Farbe, Form und Bewegung.",
       };
 
-      const canvas = document.getElementById("eeg-chart");
-      const ctx = canvas.getContext("2d");
+      let isRotating = false;
+      let currentActiveElectrode = null;
 
-      function showSection(sectionId) {
-        document
-          .querySelectorAll(".section")
-          .forEach((s) => s.classList.remove("active"));
-        document.getElementById("section-" + sectionId).classList.add("active");
+      function showView(viewName) {
+        document.getElementById("main-view").classList.remove("active");
+        document.getElementById("electrode-view").classList.remove("active");
 
-        document.querySelectorAll(".nav-link").forEach((link) => {
-          link.classList.remove("active", "text-white");
-          link.classList.add("text-slate-300");
-        });
-        const activeLink = document.querySelector(
-          `.nav-link[data-section="${sectionId}"]`
-        );
-        if (activeLink) {
-          activeLink.classList.add("active", "text-white");
-          activeLink.classList.remove("text-slate-300");
+        if (viewName === "electrode") {
+          document.getElementById("electrode-view").classList.add("active");
+        } else {
+          document.getElementById("main-view").classList.add("active");
         }
       }
 
-      document
-        .getElementById("mobile-menu-btn")
-        .addEventListener("click", () => {
-          document.getElementById("mobile-menu").classList.toggle("open");
+      function deactivateAllElectrodes() {
+        document.querySelectorAll(".electrode").forEach((el) => {
+          el.classList.remove("active");
+          el.classList.add("inactive");
         });
-
-      function closeMobileMenu() {
-        document.getElementById("mobile-menu").classList.remove("open");
+        document.querySelectorAll(".wave-ring").forEach((ring) => {
+          ring.classList.remove("active");
+        });
       }
 
-      function setWaveType(type) {
-        currentWaveType = type;
-        const wave = waveTypes[type];
-        document.getElementById("status-display").textContent = wave.name;
-        document.getElementById("status-display").style.color = wave.color;
-        document.getElementById("status-display-header").textContent =
-          wave.name;
-        document.getElementById("status-display-header").style.color =
-          wave.color;
-        document.getElementById("frequency-display").textContent = wave.freq;
+      function activateElectrode(group) {
+        const electrode = group.querySelector(".electrode");
+        const waveRing = group.querySelector(".wave-ring");
+        const zone = group.dataset.zone;
+        const name = group.dataset.name;
 
-        document.querySelectorAll('[id^="btn-"]').forEach((btn) => {
-          if (
-            btn.id.startsWith("btn-alpha") ||
-            btn.id.startsWith("btn-beta") ||
-            btn.id.startsWith("btn-theta") ||
-            btn.id.startsWith("btn-delta") ||
-            btn.id.startsWith("btn-adhd")
-          ) {
-            btn.classList.remove(
-              "ring-2",
-              "ring-green-400",
-              "ring-white",
-              "shadow-lg"
-            );
+        deactivateAllElectrodes();
+
+        electrode.classList.remove("inactive");
+        electrode.classList.add("active");
+        waveRing.classList.add("active");
+
+        currentActiveElectrode = name;
+
+        document.getElementById("active-zone").textContent = zone;
+        document.getElementById("active-electrode").textContent = name;
+        document.getElementById("zone-description").textContent =
+          zoneDescriptions[zone];
+
+        const freq = (Math.random() * 30 + 5).toFixed(1);
+        let waveType = "Beta";
+        if (freq < 4) waveType = "Delta";
+        else if (freq < 8) waveType = "Theta";
+        else if (freq < 13) waveType = "Alpha";
+        else if (freq < 30) waveType = "Beta";
+        else waveType = "Gamma";
+
+        document.getElementById(
+          "frequency-display"
+        ).textContent = `${freq} Hz (${waveType})`;
+      }
+
+      function activateZone(zoneName) {
+        deactivateAllElectrodes();
+        const electrodesInZone = document.querySelectorAll(
+          `.electrode-group[data-zone="${zoneName}"]`
+        );
+        if (electrodesInZone.length > 0) {
+          activateElectrode(electrodesInZone[0]);
+        }
+      }
+
+      function setupEventListeners() {
+        document
+          .getElementById("back-btn")
+          ?.addEventListener("click", () => showView("main"));
+
+        document.getElementById("rotate-btn")?.addEventListener("click", () => {
+          const brainGroup = document.getElementById("brain-group");
+          isRotating = !isRotating;
+
+          if (isRotating) {
+            brainGroup.classList.add("rotating");
+            document.getElementById("rotate-btn").textContent = "⏸ Pause";
+          } else {
+            brainGroup.classList.remove("rotating");
+            document.getElementById("rotate-btn").textContent = "🔄 Rotieren";
           }
         });
-        document
-          .getElementById("btn-" + type)
-          .classList.add("ring-2", "ring-white", "shadow-lg");
+
+        document.getElementById("reset-btn")?.addEventListener("click", () => {
+          const brainGroup = document.getElementById("brain-group");
+          brainGroup.classList.remove("rotating");
+          brainGroup.style.transform = "rotateY(0deg)";
+          isRotating = false;
+          document.getElementById("rotate-btn").textContent = "🔄 Rotieren";
+
+          deactivateAllElectrodes();
+
+          document.getElementById("active-zone").textContent = "--";
+          document.getElementById("active-electrode").textContent = "--";
+          document.getElementById("frequency-display").textContent = "-- Hz";
+          document.getElementById("zone-description").textContent =
+            "Klicken Sie auf eine Elektrode oder wählen Sie eine Zone, um detaillierte Informationen über die Gehirnfunktionen zu sehen.";
+          currentActiveElectrode = null;
+        });
+
+        document.querySelectorAll(".zone-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const zone = btn.dataset.zone;
+            activateZone(zone);
+          });
+        });
+
+        document.querySelectorAll(".electrode-group").forEach((group) => {
+          group.addEventListener("click", () => {
+            activateElectrode(group);
+          });
+        });
       }
 
-      function setActiveElectrode(electrodeId) {
-        activeElectrode = electrodeId;
-        const electrode = electrodes[electrodeId];
-        if (!electrode) return;
+      async function onConfigChange(config) {
+        const bgColor =
+          config.background_color || defaultConfig.background_color;
+        const surfaceColor =
+          config.surface_color || defaultConfig.surface_color;
+        const textColor = config.text_color || defaultConfig.text_color;
+        const primaryColor =
+          config.primary_action_color || defaultConfig.primary_action_color;
+        const secondaryColor =
+          config.secondary_action_color || defaultConfig.secondary_action_color;
+        const fontFamily = config.font_family || defaultConfig.font_family;
+        const baseSize = config.font_size || defaultConfig.font_size;
 
-        document.getElementById("electrode-display").textContent =
-          electrode.name;
-        document.getElementById("electrode-display-header").textContent =
-          electrode.name;
-        const regionDisplay = document.getElementById("electrode-region");
-        if (regionDisplay) regionDisplay.textContent = electrode.region;
-        const iconDisplay = document.getElementById("electrode-icon");
-        if (iconDisplay) iconDisplay.textContent = electrode.icon;
-        const channelDisplay = document.getElementById("channel-display");
-        if (channelDisplay) channelDisplay.textContent = electrode.name;
+        document.querySelector("main").style.background = bgColor;
+        document.body.style.background = bgColor;
+        document.querySelector("main").style.color = textColor;
+
+        const fontStack = `${fontFamily}, system-ui, -apple-system, sans-serif`;
+        document.querySelector("main").style.fontFamily = fontStack;
+
+        document.getElementById("platform-title").style.fontSize = `${
+          baseSize * 3.5
+        }px`;
+        document.getElementById("platform-subtitle").style.fontSize = `${
+          baseSize * 1.375
+        }px`;
 
         document
-          .querySelectorAll("#sim-electrode-map .electrode")
-          .forEach((el) => {
-            el.classList.remove("selected");
-            const circles = el.querySelectorAll("circle");
-            if (circles.length > 0) {
-              circles[0].removeAttribute("filter");
-              circles[0].setAttribute("stroke", "#fff");
-              circles[0].setAttribute("stroke-width", "1.5");
-            }
+          .querySelectorAll(
+            ".rounded-xl.shadow-xl, .rounded-2xl.shadow-2xl, .rounded-3xl.shadow-2xl, .menu-card"
+          )
+          .forEach((panel) => {
+            panel.style.background = surfaceColor;
+            panel.style.color = textColor;
           });
 
-        const elGroup = document.getElementById("electrode-" + electrodeId);
-        if (elGroup) {
-          elGroup.classList.add("selected");
-          const circles = elGroup.querySelectorAll("circle");
-          if (circles.length > 0) {
-            circles[0].setAttribute("filter", "url(#glow)");
-            circles[0].setAttribute("stroke", "#fbbf24");
-            circles[0].setAttribute("stroke-width", "3");
-          }
-        }
+        document
+          .querySelectorAll(
+            ".menu-card > div:last-child, .zone-btn, #back-btn, #rotate-btn, #reset-btn"
+          )
+          .forEach((btn) => {
+            btn.style.background = primaryColor;
+            btn.style.color = textColor;
+          });
 
-        eegData = [];
-        time = 0;
-      }
-
-      function generateEEGSample() {
-        const wave = waveTypes[currentWaveType];
-        const electrode = electrodes[activeElectrode];
-        const modifier = electrode ? electrode.modifier : 1.0;
-
-        let sample;
-
-        // Spezielles Muster für schwere ADHS - chaotisches Signal
-        if (currentWaveType === "adhd") {
-          // Theta-Überschuss (frontale Verlangsamung bei ADHS)
-          sample =
-            amplitude * modifier * 1.4 * Math.sin(2 * Math.PI * 5 * time);
-          // Beta-Defizit (geringe Konzentrationsaktivität)
-          sample +=
-            amplitude * modifier * 0.2 * Math.sin(2 * Math.PI * 18 * time);
-          // Zufällige Hochfrequenz-Bursts (neuronale Hyperaktivität)
-          if (Math.random() > 0.85) {
-            sample +=
-              amplitude * modifier * 0.8 * Math.sin(2 * Math.PI * 35 * time);
-          }
-          // Plötzliche Unterbrechungen (Unaufmerksamkeit)
-          if (Math.random() > 0.92) {
-            sample *= 0.1;
-          }
-          // Hohes Rauschniveau (charakteristische Unregelmäßigkeit)
-          sample += (Math.random() - 0.5) * amplitude * modifier * 0.6;
-          // Verstärkung im Frontalbereich (wo ADHS erkannt wird)
-          if (
-            activeElectrode.startsWith("fp") ||
-            activeElectrode.startsWith("f")
-          ) {
-            sample *= 1.5;
-          }
-        } else {
-          sample =
-            amplitude * modifier * Math.sin(2 * Math.PI * wave.freq * time);
-          sample +=
-            amplitude *
-            modifier *
-            0.3 *
-            Math.sin(2 * Math.PI * wave.freq * 2 * time);
-          sample +=
-            amplitude *
-            modifier *
-            0.1 *
-            Math.sin(2 * Math.PI * wave.freq * 3 * time);
-
-          if (activeElectrode.startsWith("o") && currentWaveType === "alpha") {
-            sample *= 1.4;
-          } else if (
-            activeElectrode.startsWith("fp") &&
-            currentWaveType === "beta"
-          ) {
-            sample *= 1.3;
-          }
-
-          sample +=
-            (Math.random() - 0.5) *
-            2 *
-            amplitude *
-            modifier *
-            (noiseLevel / 100);
-        }
-
-        return sample;
-      }
-
-      function drawChart() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const xScale = canvas.width / maxDataPoints;
-        const yCenter = canvas.height / 2;
-        const yScale = (canvas.height * 0.4) / amplitude;
-
-        ctx.strokeStyle = "#334155";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        ctx.moveTo(0, yCenter);
-        ctx.lineTo(canvas.width, yCenter);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        if (eegData.length < 2) return;
-
-        const wave = waveTypes[currentWaveType];
-
-        ctx.shadowColor = wave.glow;
-        ctx.shadowBlur = 15;
-        ctx.strokeStyle = wave.color;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-
-        for (let i = 0; i < eegData.length; i++) {
-          const x = i * xScale;
-          const y = yCenter - eegData[i] * yScale;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-
-      function animate() {
-        if (!isRunning) return;
-
-        const sample = generateEEGSample();
-        eegData.push(sample);
-
-        if (eegData.length > maxDataPoints) eegData.shift();
-
-        time += 1 / 250;
-        document.getElementById("time-display").textContent =
-          time.toFixed(1) + "s";
-        document.getElementById("time-display-header").textContent =
-          time.toFixed(1) + "s";
-
-        drawChart();
-
-        animationId = requestAnimationFrame(animate);
-      }
-
-      function toggleSimulation() {
-        const btn = document.getElementById("btn-start-stop");
-        if (isRunning) {
-          isRunning = false;
-          cancelAnimationFrame(animationId);
-          btn.innerHTML = "▶ Simulation starten";
-          btn.classList.remove(
-            "from-red-600",
-            "to-orange-600",
-            "border-red-400",
-            "shadow-red-500/30"
-          );
-          btn.classList.add(
-            "from-emerald-600",
-            "to-cyan-600",
-            "border-emerald-400",
-            "shadow-emerald-500/30"
-          );
-        } else {
-          isRunning = true;
-          time = 0;
-          eegData = [];
-          btn.innerHTML = "⏹ Anhalten";
-          btn.classList.remove(
-            "from-emerald-600",
-            "to-cyan-600",
-            "border-emerald-400",
-            "shadow-emerald-500/30"
-          );
-          btn.classList.add(
-            "from-red-600",
-            "to-orange-600",
-            "border-red-400",
-            "shadow-red-500/30"
-          );
-          animate();
-        }
-      }
-
-      document
-        .getElementById("amplitude-slider")
-        .addEventListener("input", (e) => {
-          amplitude = parseInt(e.target.value);
-          document.getElementById("amplitude-value").textContent =
-            amplitude + " µV";
+        document.querySelectorAll(".feature-card").forEach((card) => {
+          card.style.background = `rgba(${parseInt(
+            primaryColor.slice(1, 3),
+            16
+          )}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(
+            primaryColor.slice(5, 7),
+            16
+          )}, 0.1)`;
         });
 
-      document.getElementById("noise-slider").addEventListener("input", (e) => {
-        noiseLevel = parseInt(e.target.value);
-        document.getElementById("noise-value").textContent = noiseLevel + "%";
-      });
+        document.querySelectorAll("span.px-6.py-3").forEach((badge) => {
+          badge.style.background = `rgba(${parseInt(
+            primaryColor.slice(1, 3),
+            16
+          )}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(
+            primaryColor.slice(5, 7),
+            16
+          )}, 0.2)`;
+          badge.style.color = textColor;
+        });
+
+        const brainPaths = document.querySelectorAll(
+          "#brain-group path, #brain-group line"
+        );
+        brainPaths.forEach((path) => path.setAttribute("stroke", primaryColor));
+
+        Object.keys(zoneColors).forEach((zone) => {
+          const color = zoneColors[zone];
+          document
+            .querySelectorAll(
+              `.electrode-group[data-zone="${zone}"] .electrode`
+            )
+            .forEach((el) => {
+              el.setAttribute("fill", color);
+              el.setAttribute("stroke", color);
+            });
+          document
+            .querySelectorAll(
+              `.electrode-group[data-zone="${zone}"] .wave-ring`
+            )
+            .forEach((el) => {
+              el.setAttribute("stroke", color);
+            });
+          document
+            .querySelectorAll(`.electrode-group[data-zone="${zone}"] text`)
+            .forEach((el) => {
+              el.setAttribute("fill", textColor);
+            });
+        });
+
+        document.getElementById("legend-frontal").style.background =
+          zoneColors.Frontal;
+        document.getElementById("legend-central").style.background =
+          zoneColors.Central;
+        document.getElementById("legend-parietal").style.background =
+          zoneColors.Parietal;
+        document.getElementById("legend-temporal").style.background =
+          zoneColors.Temporal;
+        document.getElementById("legend-occipital").style.background =
+          zoneColors.Occipital;
+
+        document.querySelectorAll(".signal-bar").forEach((bar) => {
+          bar.style.background = primaryColor;
+        });
+
+        document.getElementById("platform-title").textContent =
+          config.platform_title || defaultConfig.platform_title;
+        document.getElementById("platform-subtitle").textContent =
+          config.platform_subtitle || defaultConfig.platform_subtitle;
+        document.getElementById("menu-realtime").textContent =
+          config.menu_realtime || defaultConfig.menu_realtime;
+        document.getElementById("menu-vr").textContent =
+          config.menu_vr || defaultConfig.menu_vr;
+        document.getElementById("menu-electrodes").textContent =
+          config.menu_electrodes || defaultConfig.menu_electrodes;
+        document.getElementById("menu-history").textContent =
+          config.menu_history || defaultConfig.menu_history;
+      }
+
+      function mapToCapabilities(config) {
+        return {
+          recolorables: [
+            {
+              get: () =>
+                config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              },
+            },
+            {
+              get: () => config.surface_color || defaultConfig.surface_color,
+              set: (value) => {
+                config.surface_color = value;
+                window.elementSdk.setConfig({ surface_color: value });
+              },
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              },
+            },
+            {
+              get: () =>
+                config.primary_action_color ||
+                defaultConfig.primary_action_color,
+              set: (value) => {
+                config.primary_action_color = value;
+                window.elementSdk.setConfig({ primary_action_color: value });
+              },
+            },
+            {
+              get: () =>
+                config.secondary_action_color ||
+                defaultConfig.secondary_action_color,
+              set: (value) => {
+                config.secondary_action_color = value;
+                window.elementSdk.setConfig({ secondary_action_color: value });
+              },
+            },
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            },
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            },
+          },
+        };
+      }
+
+      function mapToEditPanelValues(config) {
+        return new Map([
+          [
+            "platform_title",
+            config.platform_title || defaultConfig.platform_title,
+          ],
+          [
+            "platform_subtitle",
+            config.platform_subtitle || defaultConfig.platform_subtitle,
+          ],
+          [
+            "menu_realtime",
+            config.menu_realtime || defaultConfig.menu_realtime,
+          ],
+          ["menu_vr", config.menu_vr || defaultConfig.menu_vr],
+          [
+            "menu_electrodes",
+            config.menu_electrodes || defaultConfig.menu_electrodes,
+          ],
+          ["menu_history", config.menu_history || defaultConfig.menu_history],
+        ]);
+      }
 
       if (window.elementSdk) {
         window.elementSdk.init({
           defaultConfig,
-          onConfigChange: async (cfg) => {
-            config = { ...defaultConfig, ...cfg };
-            document.getElementById("app-title").textContent =
-              config.app_title || defaultConfig.app_title;
-          },
-          mapToCapabilities: (cfg) => ({
-            recolorables: [],
-            borderables: [],
-            fontEditable: undefined,
-            fontSizeable: undefined,
-          }),
-          mapToEditPanelValues: (cfg) =>
-            new Map([["app_title", cfg.app_title || defaultConfig.app_title]]),
+          onConfigChange,
+          mapToCapabilities,
+          mapToEditPanelValues,
         });
       }
 
-      setWaveType("alpha");
-      setActiveElectrode("fp1");
-      drawChart();
+      setupEventListeners();
     </script>
     <script>
       (function () {
@@ -2851,7 +1636,7 @@
           if (b) {
             var d = b.createElement("script");
             d.innerHTML =
-              "window.__CF$cv$params={r:'9b91369f37e6eef2',t:'MTc2NzU5NzYyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+              "window.__CF$cv$params={r:'9b9de12964eeeef2',t:'MTc2NzczMDQ0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
             b.getElementsByTagName("head")[0].appendChild(d);
           }
         }
